@@ -18,9 +18,9 @@ const dateTimeOptions: Intl.DateTimeFormatOptions = {
 };
 ---
 
-<button
-	class="flex items-center gap-x-1 text-accent mb-8 hover:underline group cursor-pointer"
-	onclick="history.back()"
+<a
+	class="flex items-center gap-x-1 text-accent mb-8 hover:underline group"
+	href="/"
 >
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
@@ -38,7 +38,7 @@ const dateTimeOptions: Intl.DateTimeFormatOptions = {
 		<line x1="5" y1="12" x2="11" y2="6"></line>
 	</svg>
 	<span>Go back</span>
-</button>
+</a>
 
 {
 	data.coverImage && (
