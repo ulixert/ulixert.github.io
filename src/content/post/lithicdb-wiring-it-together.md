@@ -2,6 +2,7 @@
 title: "Sequence Numbers, the Merge Iterator, and Wiring It All Together"
 description: "How the storage foundation pieces are wired into a working engine, including internal key encoding and the merge iterator."
 publishDate: "2026-03-15"
+updatedDate: "2026-03-15"
 tags: ["go", "databases", "lsm-tree", "lithicdb", "merge-iterator"]
 ---
 
@@ -237,3 +238,10 @@ The TOCTOU bug in `flushImmutables` was humbling. The fix was trivial (read leng
 - Lu, L., Pillai, T. S., et al. (2016). *WiscKey: Separating Keys from Values in SSD-Conscious Storage*. FAST '16.
 - Peng, D., & Dabek, F. (2010). *Large-scale Incremental Processing Using Distributed Transactions and Notifications*. OSDI '10.
 - Luo, C., & Carey, M. J. (2020). *LSM-based Storage Techniques: A Survey*. VLDB Journal, 29(1).
+
+---
+
+### In this series
+1. [Building LithicDB: A Distributed LSM Storage Engine from Scratch in Go](/posts/building-lithicdb/)
+2. [The Storage Foundation: Memtable, WAL, and SSTables](/posts/lithicdb-storage-foundation/)
+3. **Sequence Numbers, the Merge Iterator, and Wiring It All Together**

@@ -1,7 +1,8 @@
 ---
 title: "Building LithicDB: A Distributed LSM Storage Engine from Scratch in Go"
 description: "A deep dive into the design and implementation of LithicDB, an LSM-based storage engine exploring durability, MVCC, and distributed partitioning."
-publishDate: "2026-03-10"
+publishDate: "2026-01-08"
+updatedDate: "2026-03-10"
 tags: ["go", "databases", "lsm-tree", "lithicdb", "distributed-systems"]
 pinned: true
 ---
@@ -32,9 +33,9 @@ At a high level, that means:
 - background **compaction** merges SSTables into larger, better-organized levels
 
 ```
-  Put("key", "val")
-        │
-        ▼
+               Put("key", "val")
+                        │
+                        ▼
   ┌──────────┐     ┌──────────┐
   │   WAL    │◄────│  Engine  │
   │ (append) │     └────┬─────┘
@@ -132,9 +133,17 @@ That's the foundation everything else depends on. The next post will cover how t
 
 ---
 
-*LithicDB is open source at [github.com/ulixert/lithicdb](https://github.com/ulixert/lithicdb). If you're interested in storage engines, LSM trees, or building databases from scratch, follow along.*
+### Read next
+[**The Storage Foundation: Memtable, WAL, and SSTables**](/posts/lithicdb-storage-foundation/)
 
-**References:**
+---
+
+### In this series
+1. **Building LithicDB: A Distributed LSM Storage Engine from Scratch in Go**
+2. [The Storage Foundation: Memtable, WAL, and SSTables](/posts/lithicdb-storage-foundation/)
+3. [Sequence Numbers, the Merge Iterator, and Wiring It All Together](/posts/lithicdb-wiring-it-together/)
+
+## References
 
 - O'Neil, P., Cheng, E., Gawlick, D., & O'Neil, E. (1996). *The Log-Structured Merge-Tree (LSM-Tree)*. Acta Informatica, 33(4), 351–385.
 - Lu, L., Pillai, T. S., et al. (2016). *WiscKey: Separating Keys from Values in SSD-Conscious Storage*. FAST '16.

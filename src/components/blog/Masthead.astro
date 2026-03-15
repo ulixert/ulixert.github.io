@@ -58,19 +58,16 @@ const dateTimeOptions: Intl.DateTimeFormatOptions = {
 <h1 class="title text-3xl text-accent mb-4">
 	{data.title}
 </h1>
-<div class="flex flex-wrap items-center gap-x-3 gap-y-2 mb-6">
-	<p class="font-semibold text-gray-600 dark:text-gray-400">
-		<FormattedDate date={data.publishDate} dateTimeOptions={dateTimeOptions} /> /{" "}
+<div class="flex flex-wrap items-center gap-x-3 gap-y-2 mb-6 text-gray-600 dark:text-gray-400 font-semibold text-sm sm:text-base">
+	<p>
+		{
+			data.updatedDate && data.updatedDate.getTime() !== data.publishDate.getTime() && (
+				<span class="me-1">Updated:</span>
+			)
+		}
+		<FormattedDate date={data.updatedDate ?? data.publishDate} dateTimeOptions={dateTimeOptions} /> /{" "}
 		{readingTime}
 	</p>
-	{
-		data.updatedDate && (
-			<span class="bg-quote/5 text-quote rounded-lg px-2 py-1">
-				Updated:
-				<FormattedDate class="ms-1" date={data.updatedDate} dateTimeOptions={dateTimeOptions} />
-			</span>
-		)
-	}
 </div>
 {
 	!!data.tags?.length && (
