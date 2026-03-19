@@ -131,18 +131,6 @@ The first really consequential design choice is the on-disk layout. Once data st
 
 That's the foundation everything else depends on. The next post will cover how that went.
 
----
-
-### Read next
-[**The Storage Foundation: Memtable, WAL, and SSTables**](/posts/lithicdb-storage-foundation/)
-
----
-
-### In this series
-1. **Building LithicDB: A Distributed LSM Storage Engine from Scratch in Go**
-2. [The Storage Foundation: Memtable, WAL, and SSTables](/posts/lithicdb-storage-foundation/)
-3. [Sequence Numbers, the Merge Iterator, and Wiring It All Together](/posts/lithicdb-wiring-it-together/)
-
 ## References
 
 - O'Neil, P., Cheng, E., Gawlick, D., & O'Neil, E. (1996). *The Log-Structured Merge-Tree (LSM-Tree)*. Acta Informatica, 33(4), 351–385.

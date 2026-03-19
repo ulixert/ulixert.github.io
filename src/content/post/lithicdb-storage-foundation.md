@@ -189,15 +189,3 @@ The bloom filter was simpler to implement than I expected. The LevelDB approach 
 *The next post covers the integration layer: internal key encoding with sequence numbers, the merge iterator, and how everything gets wired into a working engine.*
 
 *LithicDB is open source at [github.com/ulixert/lithicdb](https://github.com/ulixert/lithicdb).*
-
----
-
-### Read next
-[**Sequence Numbers, the Merge Iterator, and Wiring It All Together**](/posts/lithicdb-wiring-it-together/)
-
----
-
-### In this series
-1. [Building LithicDB: A Distributed LSM Storage Engine from Scratch in Go](/posts/building-lithicdb/)
-2. **The Storage Foundation: Memtable, WAL, and SSTables**
-3. [Sequence Numbers, the Merge Iterator, and Wiring It All Together](/posts/lithicdb-wiring-it-together/)
