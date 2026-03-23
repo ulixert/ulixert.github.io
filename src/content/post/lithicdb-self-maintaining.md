@@ -2,8 +2,8 @@
 title: "Making the Engine Self-Maintaining: Compaction, Caching, and Durability"
 description: "How the manifest, leveled compaction, block cache, and write batches turned LithicDB into a self-maintaining storage engine."
 publishDate: "2026-03-18"
-updatedDate: "2026-03-18"
-tags: ["go", "databases", "lsm-tree", "lithicdb", "compaction", "manifest", "caching"]
+updatedDate: "2026-03-22"
+tags: ["go", "databases", "lsm-tree", "lithicdb", "compaction", "manifest", "caching", "mmap"]
 ---
 
 At the end of the [last post](/posts/lithicdb-wiring-it-together/), [LithicDB](https://github.com/ulixert/lithicdb) could write keys, flush memtables to SSTables, and recover from crashes via the WAL. It worked, but it had two problems that made it useless for anything beyond a demo:
@@ -199,6 +199,36 @@ The cache is a sharded LRU. Sharding reduces lock contention — instead of one 
 
 One design choice worth noting: flushed memtables don't populate the cache. Flush writes are cold data — they hit the disk once and might not be read for a long time. Letting them fill the cache would evict hot blocks that are actively serving reads.
 
+## mmap and Memory Discipline
+
+After building the block cache, I noticed something uncomfortable about the SSTable reader. `OpenReader` called `os.ReadFile(path)` — the entire file was loaded into a heap-allocated `[]byte`. Every SSTable held open by the engine (and they're all held open) consumed its full size on the Go heap. With default level sizing:
+
+```
+L0:  4 files  × 25MB  = ~100MB
+L1:  10 files × 25MB  = ~256MB
+L2: 100 files × 25MB  = ~2.5GB
+```
+
+That's nearly 3GB of raw bytes on the heap, on top of memtables and the block cache. This wasn't a problem for test databases, but it would be the moment anyone loaded real data. And in the upcoming distributed layer, each node will hold its partition's full SSTable set plus a second `db.DB` for the hinted handoff store — roughly doubling the footprint.
+
+The fix: `syscall.Mmap(fd, 0, size, PROT_READ, MAP_PRIVATE)`. Instead of copying the file into the Go heap, the OS maps it into the process's virtual address space. Physical pages are loaded on demand and managed by the kernel's page cache. Cold pages get evicted under pressure. The Go heap stays small.
+
+The change was surprisingly contained — the existing code already treated `Reader.data` as a `[]byte` and indexed into it everywhere. Since an mmap'd region is also a `[]byte`, all block reads, index decoding, and checksum verification worked unchanged. Three things needed attention:
+
+The **bloom filter** is a sub-slice of `Reader.data`. With mmap, it would be invalidated when the mapping is released. Since it's checked on every point lookup, I copy it to a separate heap allocation on open (~1KB per SSTable — negligible).
+
+**`Reader.Close()`** calls `syscall.Munmap`, protected by `sync.Once` for idempotency. `DB.Close()` calls it on every live handle.
+
+**Deleted-but-still-mapped files** are safe on Unix — `os.Remove` while a file is mmap'd keeps the inode alive until the last mapping is released. This means compaction can delete old SSTables while scan iterators safely continue reading from the mmap'd region. The `munmap` only happens at `DB.Close()`, not during compaction — adding `Ref`/`Unref` to every read path would be the correct long-term fix but is a larger refactoring for later.
+
+The mmap switch also made the block cache actually useful — more on this in the benchmarks below.
+
+## Structured Error Logging
+
+The codebase had three `// TODO: log error` stubs in critical paths — flush failure, compaction execution failure, compaction apply failure. All three silently swallowed errors. A disk-full condition or corrupted SSTable would cause the background goroutine to exit without any indication, and writes would eventually block on backpressure with no error message explaining why.
+
+The fix was adding `*slog.Logger` to `db.Options` (defaulting to `slog.Default()`) and replacing the stubs with structured `db.logger.Error(...)` calls. Small change, but important for debuggability as more moving parts are added.
+
 ## Write Batches
 
 Individual `Put` and `Delete` calls each write a WAL record and fsync. If you need to update ten keys atomically, that's ten fsyncs. The write batch API groups them:
@@ -258,32 +288,34 @@ Check the length and access the element under the same lock. This passed 100 con
 
 ## Benchmarks
 
-Here are the numbers on an Apple M1 (v0.3.0, `go test -bench`):
+Here are the numbers on an Apple M1 (v0.5.0 with mmap reader, `go test -bench`):
 
 ```
-BenchmarkMemtable_Put_Sequential     321    3,731,371 ns/op      309 B/op      5 allocs/op
-BenchmarkMemtable_Get_Hit        2,446,668        412.1 ns/op    207 B/op      2 allocs/op
-BenchmarkSSTable_Get_Hit         1,118,451      1,016 ns/op      208 B/op      2 allocs/op
-BenchmarkSSTable_Get_Miss          770,326      1,512 ns/op      208 B/op      3 allocs/op
-BenchmarkSSTable_Get_CacheHit    1,172,491      1,084 ns/op      207 B/op      2 allocs/op
-BenchmarkSSTable_Scan                  577  1,850,472 ns/op    1.3 MB     30,019 allocs/op
-BenchmarkPut_WithFlush               319    3,978,317 ns/op    2,311 B/op     11 allocs/op
-BenchmarkWriteBatch_100              259    4,576,243 ns/op   54,176 B/op    411 allocs/op
+BenchmarkMemtable_Put_Sequential       318    3,796,776 ns/op      309 B/op      5 allocs/op
+BenchmarkMemtable_Get_Hit          2,639,632        418.4 ns/op    207 B/op      2 allocs/op
+BenchmarkSSTable_Get_Hit           1,085,707      1,092 ns/op      207 B/op      2 allocs/op
+BenchmarkSSTable_Get_Miss            836,486      1,461 ns/op      208 B/op      2 allocs/op
+BenchmarkSSTable_Get_CacheHit      1,199,043      1,008 ns/op      207 B/op      2 allocs/op
+BenchmarkSSTable_Scan                    640  1,846,533 ns/op    1.3 MB     30,020 allocs/op
+BenchmarkPut_WithFlush                 313    3,983,520 ns/op    2,092 B/op     11 allocs/op
+BenchmarkWriteBatch_100                283    4,029,229 ns/op   54,256 B/op    419 allocs/op
 ```
 
 A few things worth noting.
 
-**Memtable get (412 ns) vs SSTable get (1016 ns).** The skip list lookup is pure in-memory pointer chasing. The SSTable path has to check the bloom filter, binary-search the index, then binary-search the data block. The 2.5x gap is the cost of structured disk reads — and this is with the data already in the OS page cache.
+**Memtable get (418 ns) vs SSTable get (1,092 ns).** The skip list lookup is pure in-memory pointer chasing. The SSTable path has to check the bloom filter, binary-search the index, then binary-search the data block. The 2.6x gap is the cost of structured reads through the mmap'd file.
 
-**SSTable miss (1512 ns) is slower than SSTable hit (1016 ns).** In the v0.1.0 benchmarks, misses were faster because the only data structure was the memtable — a miss was just a failed skip list lookup. Now with SSTables in the read path, a miss has to check the bloom filter on every SSTable before giving up. The bloom filter is cheap per-file, but it adds up across multiple files. This is exactly why compaction matters: fewer L0 files means fewer bloom filter checks on every miss.
+**SSTable miss (1,461 ns) is slower than SSTable hit (1,092 ns).** In the v0.1.0 benchmarks, misses were faster because the only data structure was the memtable — a miss was just a failed skip list lookup. Now with SSTables in the read path, a miss has to check the bloom filter on every SSTable before giving up. The bloom filter is cheap per-file, but it adds up across multiple files. This is exactly why compaction matters: fewer L0 files means fewer bloom filter checks on every miss.
 
-**Cache hit (1084 ns) barely beats a cold hit (1016 ns).** This looks like the block cache isn't helping, but it's misleading. The benchmark's working set fits comfortably in the OS page cache, so "cold" reads are actually served from kernel memory anyway. The block cache's real value appears when the working set exceeds available RAM — data that would cause a page fault gets served from the application-level cache instead. Benchmarking this properly requires a working set larger than physical memory, which is hard to do in a `go test -bench` run.
+**The block cache now shows a real win.** Cache hit (1,008 ns) is 8% faster than a cache miss (1,092 ns). Before the mmap switch, the cache was roughly break-even — "cold" reads were served from heap memory anyway, so the cache just added hash + mutex overhead without saving real work. With mmap, a cache miss goes through the mmap'd region (potentially a page fault for cold data), re-verifies the CRC32 checksum, and re-decodes the block. The block cache skips all of this — it returns an already-decoded `*Block` pointer directly. For truly cold data that requires disk I/O, the gap would be much larger.
 
-**Write batch amortization.** `WriteBatch_100` at 4.6ms means ~46µs per key. A single `Put_WithFlush` is 3.98ms for one key. The batch writes 100 keys with a single WAL record and one fsync — that's roughly 86x better per-key throughput for the WAL path. The memtable insertions are the same cost either way.
+**Write batch amortization.** `WriteBatch_100` at 4.0ms means ~40µs per key. A single `Put_WithFlush` is 3.98ms for one key. The batch writes 100 keys with a single WAL record and one fsync — that's roughly 100x better per-key throughput for the WAL path. The memtable insertions are the same cost either way.
 
 ## What's Next
 
-The engine can now manage its own disk layout, cache hot data, batch writes, and bound memory usage under sustained load. The next milestone is MVCC — timestamped keys, snapshot isolation, and optimistic transactions. The groundwork is already in place: internal keys carry sequence numbers from the beginning, and the key encoding sorts multiple versions of the same user key newest-first. No format migration needed.
+The engine can now manage its own disk layout, cache hot data, batch writes, bound memory usage under sustained load, and manage memory efficiently via mmap. The next milestone is MVCC — timestamped keys, snapshot isolation, and optimistic transactions. The groundwork is already in place: internal keys carry sequence numbers from the beginning, and the key encoding sorts multiple versions of the same user key newest-first. No format migration needed.
+
+The [next post](/posts/lithicdb-mvcc-transactions/) covers how that went — including the iterator refactor that unlocked three features at once.
 
 ---
 
