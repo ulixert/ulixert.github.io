@@ -2,7 +2,7 @@
 title: "Building LithicDB: A Distributed LSM Storage Engine from Scratch in Go"
 description: "Architecture, design decisions, and tradeoffs behind a hand-built distributed key-value store: from skip lists and SSTables to SWIM gossip and quorum coordination."
 publishDate: "2026-01-08"
-updatedDate: "2026-03-24"
+updatedDate: "2026-03-31"
 tags: ["go", "databases", "lsm-tree", "lithicdb", "distributed-systems"]
 pinned: true
 ---
@@ -185,6 +185,8 @@ Each post covers a layer of the system, building from the bottom up:
 3. [**Wiring It All Together**](/posts/lithicdb-wiring-it-together/) — Internal key encoding, the merge iterator, write path, flush, and crash recovery
 4. [**Making the Engine Self-Maintaining**](/posts/lithicdb-self-maintaining/) — Manifest, leveled compaction, block cache, mmap, write batches, and backpressure
 5. [**Snapshots, Transactions, and the Art of Not Blocking Writers**](/posts/lithicdb-mvcc-transactions/) — MVCC, snapshot isolation, optimistic transactions, and version-aware compaction GC
+6. [**Who's Alive? Building SWIM Failure Detection from Scratch**](/posts/lithicdb-swim-protocol/) — SWIM probe cycle, incarnation-based CRDT merge, gossip dissemination, and decoupling liveness from ring ownership
+7. [**Quorum Reads, Quorum Writes, and the Repair That Follows**](/posts/lithicdb-quorum-coordinator/) — Coordinator fan-out, quorum latency, two-phase read repair, and the bugs in testing impossible states
 
 ## References
 
