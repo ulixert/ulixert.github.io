@@ -1,12 +1,12 @@
 ---
 title: "Quorum Reads, Quorum Writes, and the Repair That Follows"
-description: "How LithicDB's coordinator fans out operations to replicas, resolves conflicts by HLC timestamp, and repairs stale data in the background — plus the latency traps and test design bugs that emerged."
+description: "How Theseon's coordinator fans out operations to replicas, resolves conflicts by HLC timestamp, and repairs stale data in the background — plus the latency traps and test design bugs that emerged."
 publishDate: "2026-03-31"
 updatedDate: "2026-03-31"
-tags: ["go", "databases", "lithicdb", "distributed-systems", "quorum", "read-repair", "coordinator"]
+tags: ["go", "databases", "theseon", "distributed-systems", "quorum", "read-repair", "coordinator"]
 ---
 
-At the end of the [last post](/posts/lithicdb-swim-protocol/), the cluster could detect failures and propagate membership changes. Every node had a local view of who's alive. But that's infrastructure — it doesn't serve reads or writes yet.
+At the end of the [last post](/posts/theseon-swim-protocol/), the cluster could detect failures and propagate membership changes. Every node had a local view of who's alive. But that's infrastructure — it doesn't serve reads or writes yet.
 
 This post covers the coordinator: the component that receives a client request on any node and turns it into a distributed operation. It fans out writes to N replicas, waits for W acknowledgements, fans out reads to the same replicas, waits for R responses, picks the newest value, and repairs any replica that fell behind. The consistency guarantee comes from a simple arithmetic property: if R + W > N, every read quorum overlaps with every write quorum. There's always at least one replica that saw the most recent write.
 
@@ -26,7 +26,7 @@ Conflict resolution is last-writer-wins (LWW): `NewerEnvelope` compares HLC time
 
 Tombstones matter here. A delete is not the absence of a value; it's a value with `Deleted: true` and its own HLC timestamp. If a delete has a higher timestamp than a concurrent write, the delete wins. If the write is newer, it wins. Without timestamped tombstones, a deleted key could be resurrected by a stale replica that still has the old value — a correctness bug that's subtle to detect and expensive to debug.
 
-The tradeoff: every value now has at least 16 bytes of overhead (version, deleted flag, HLC timestamp). For large values this is negligible. For a key-value pair where the value is 8 bytes, it doubles the storage. For LithicDB's use case — a general-purpose database, not a counter store — this is acceptable.
+The tradeoff: every value now has at least 16 bytes of overhead (version, deleted flag, HLC timestamp). For large values this is negligible. For a key-value pair where the value is 8 bytes, it doubles the storage. For Theseon's use case — a general-purpose database, not a counter store — this is acceptable.
 
 ## The Write Path
 
@@ -240,7 +240,7 @@ Two holes remain. When a replica is dead during a write, the write is simply ski
 
 ---
 
-*LithicDB is open source at [github.com/ulixert/lithicdb](https://github.com/ulixert/lithicdb).*
+*Theseon is open source at [github.com/ulixert/theseon](https://github.com/ulixert/theseon).*
 
 **References:**
 

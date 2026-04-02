@@ -3,10 +3,10 @@ title: "Sequence Numbers, the Merge Iterator, and Wiring It All Together"
 description: "How the storage foundation pieces are wired into a working engine, including internal key encoding and the merge iterator."
 publishDate: "2026-03-15"
 updatedDate: "2026-03-15"
-tags: ["go", "databases", "lsm-tree", "lithicdb", "merge-iterator"]
+tags: ["go", "databases", "lsm-tree", "theseon", "merge-iterator"]
 ---
 
-This is the third post in my series on building [LithicDB](https://github.com/ulixert/lithicdb). The [previous post](/posts/lithicdb-storage-foundation/) covered the building blocks: memtable, WAL, and SSTables. This post covers the decision that reshaped the project mid-build, the merge iterator that ties everything together, and the bugs I caught along the way.
+This is the third post in my series on building [Theseon](https://github.com/ulixert/theseon). The [previous post](/posts/theseon-storage-foundation/) covered the building blocks: memtable, WAL, and SSTables. This post covers the decision that reshaped the project mid-build, the merge iterator that ties everything together, and the bugs I caught along the way.
 
 ## The Decision That Changed Everything
 
@@ -20,7 +20,7 @@ Instead, I added sequence numbers to the internal key encoding before building t
 
 ## Internal Key Encoding
 
-Every key stored in LithicDB is an internal key:
+Every key stored in Theseon is an internal key:
 
 ```
 Internal Key:
@@ -230,7 +230,7 @@ The TOCTOU bug in `flushImmutables` was humbling. The fix was trivial (read leng
 
 *The codebase is tagged `v0.1.0` at this point. Next up: the manifest file and leveled compaction — the parts that make an LSM tree actually manage its disk layout instead of just growing forever.*
 
-*LithicDB is open source at [github.com/ulixert/lithicdb](https://github.com/ulixert/lithicdb).*
+*Theseon is open source at [github.com/ulixert/theseon](https://github.com/ulixert/theseon).*
 
 **References:**
 

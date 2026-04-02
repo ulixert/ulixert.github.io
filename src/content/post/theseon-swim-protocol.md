@@ -1,12 +1,12 @@
 ---
 title: "Who's Alive? Building SWIM Failure Detection from Scratch"
-description: "How LithicDB detects node failures without a leader — implementing the SWIM gossip protocol from the paper, the bugs that emerged, and why liveness and data ownership must be decoupled."
+description: "How Theseon detects node failures without a leader — implementing the SWIM gossip protocol from the paper, the bugs that emerged, and why liveness and data ownership must be decoupled."
 publishDate: "2026-03-29"
 updatedDate: "2026-03-29"
-tags: ["go", "databases", "lithicdb", "distributed-systems", "swim", "gossip", "failure-detection"]
+tags: ["go", "databases", "theseon", "distributed-systems", "swim", "gossip", "failure-detection"]
 ---
 
-At the end of the [last post](/posts/lithicdb-mvcc-transactions/), LithicDB was a complete single-node storage engine. This post starts the distributed layer. Before quorum reads, replicated writes, or anti-entropy repair, the cluster needs to answer a more basic question: *who's alive?*
+At the end of the [last post](/posts/theseon-mvcc-transactions/), Theseon was a complete single-node storage engine. This post starts the distributed layer. Before quorum reads, replicated writes, or anti-entropy repair, the cluster needs to answer a more basic question: *who's alive?*
 
 A node that can't reach a peer needs to know whether the peer is temporarily slow or permanently gone. Get it wrong in one direction and you route traffic to a dead node. Get it wrong in the other and you start expensive data migration for a node that was just rebooting.
 
@@ -68,7 +68,7 @@ The direct ping is the common case — one RPC roundtrip per probe round, O(N) m
 
 **Why Suspect exists.** Declaring a node Dead immediately on ping failure would be too aggressive — a GC pause, a loaded network interface, or a transient routing problem would cause false positives. The Suspect state is a probationary period. The suspected node continues receiving probes from other members, giving it multiple chances to respond and prove it's alive. Only after `SuspectTimeout` (default: 5 seconds) with no response from any path does the node transition to Dead.
 
-The tradeoff is detection latency. A truly dead node takes `PingTimeout + SuspectTimeout` (5.5 seconds with defaults) to be declared Dead. During that window, the coordinator may still attempt RPCs to it (they'll fail with timeouts, reducing quorum response speed but not correctness). For LithicDB's use case — coordinating quorum reads and writes — a few seconds of detection delay is acceptable. The coordinator treats RPC failures as missing quorum acks, and hinted handoff ensures writes aren't lost.
+The tradeoff is detection latency. A truly dead node takes `PingTimeout + SuspectTimeout` (5.5 seconds with defaults) to be declared Dead. During that window, the coordinator may still attempt RPCs to it (they'll fail with timeouts, reducing quorum response speed but not correctness). For Theseon's use case — coordinating quorum reads and writes — a few seconds of detection delay is acceptable. The coordinator treats RPC failures as missing quorum acks, and hinted handoff ensures writes aren't lost.
 
 ### Target selection
 
@@ -135,7 +135,7 @@ Implementing the algorithm from the paper was straightforward. Getting the imple
 
 ### Ring state overwritten by gossip
 
-LithicDB tracks two independent axes per node: SWIM liveness (Alive/Suspect/Dead) and ring ownership (None/Joining/Active). The original `mergeLocked` did `*local = remote` on higher incarnation — a full struct copy. This overwrites the ring state.
+Theseon tracks two independent axes per node: SWIM liveness (Alive/Suspect/Dead) and ring ownership (None/Joining/Active). The original `mergeLocked` did `*local = remote` on higher incarnation — a full struct copy. This overwrites the ring state.
 
 The problem: Node A runs an admin command setting node-2 to RingActive. Node B hasn't seen the admin command yet, so its gossip for node-2 still says RingNone. If Node B has a higher incarnation (because node-2 refuted a suspicion), the merge overwrites RingActive with RingNone.
 
@@ -219,7 +219,7 @@ Most distributed databases couple the two. When a node is declared dead, it's re
 
 The problem: most failures are transient. A node reboots in 30 seconds, a network link flaps for 10 seconds, a GC pause triggers a false positive. Each time, the cluster moves gigabytes of data to surviving nodes, then moves it back when the node recovers. In the worst case, the rebalance is still running when the node comes back — causing a second rebalance that conflicts with the first.
 
-LithicDB decouples the two into independent axes:
+Theseon decouples the two into independent axes:
 
 ```
 Liveness (SWIM, automatic):       Alive ←→ Suspect ←→ Dead
@@ -239,11 +239,11 @@ The node join lifecycle makes this explicit:
 1. New node boots, discovers cluster via SWIM    → Liveness: Alive, Ring: None
    (receives gossip, but can't serve reads or writes — not in ring)
 
-2. Operator runs: lithicdb admin join --addr=X   → Ring: Joining
+2. Operator runs: theseon admin join --addr=X   → Ring: Joining
    (receives replicated writes + anti-entropy bootstrap, still skipped for reads)
 
 3. Operator monitors progress, then:
-   lithicdb admin activate node-4                → Ring: Active
+   theseon admin activate node-4                → Ring: Active
    (full participant — reads and writes)
 ```
 
@@ -292,7 +292,7 @@ The cluster knows who's alive. The next step is making it useful: wrapping value
 
 ---
 
-*LithicDB is open source at [github.com/ulixert/lithicdb](https://github.com/ulixert/lithicdb).*
+*Theseon is open source at [github.com/ulixert/theseon](https://github.com/ulixert/theseon).*
 
 **References:**
 

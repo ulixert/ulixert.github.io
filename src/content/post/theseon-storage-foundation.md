@@ -1,16 +1,16 @@
 ---
 title: "The Storage Foundation: Memtable, WAL, and SSTables"
-description: "A deep dive into the bottom half of the LithicDB stack: data structures and on-disk formats."
+description: "A deep dive into the bottom half of the Theseon stack: data structures and on-disk formats."
 publishDate: "2026-03-12"
 updatedDate: "2026-03-12"
-tags: ["go", "databases", "lsm-tree", "lithicdb", "storage-foundation"]
+tags: ["go", "databases", "lsm-tree", "theseon", "storage-foundation"]
 ---
 
-This is the second post in my series on building [LithicDB](https://github.com/ulixert/lithicdb), a distributed LSM storage engine in Go. The [first post](https://ulixert.github.io/posts/building-lithicdb/) covered why I'm building it and what the architecture looks like. This post covers the bottom half of the stack: the data structures and on-disk formats that everything else is built on.
+This is the second post in my series on building [Theseon](https://github.com/ulixert/theseon), a distributed LSM storage engine in Go. The [first post](https://ulixert.github.io/posts/building-theseon/) covered why I'm building it and what the architecture looks like. This post covers the bottom half of the stack: the data structures and on-disk formats that everything else is built on.
 
 ## The Iterator Contract
 
-Every readable component in LithicDB — memtables, SSTable blocks, merge iterators — implements the same interface:
+Every readable component in Theseon — memtables, SSTable blocks, merge iterators — implements the same interface:
 
 ```go
 type Iterator interface {
@@ -42,7 +42,7 @@ Level 0:  HEAD ► 3 ► 9 ► 17 ► 21 ► 28 ► 35 ► 42 ► 50 ► 58 ► 
 
 The bottom level (Level 0) is a sorted linked list of all entries. Higher levels act as express lanes — a search starts at the top and drops down when it overshoots. The probabilistic height assignment (each node has a 25% chance of being promoted one level) gives O(log n) expected time without the rebalancing cost of a tree.
 
-I built LithicDB's skip list from scratch rather than importing Badger's. The implementation uses `maxHeight=12` with promotion probability `p=0.25`, which supports roughly 16 million entries. Each node stores an internal key and a `kv.Value`, with forward pointers at each level.
+I built Theseon's skip list from scratch rather than importing Badger's. The implementation uses `maxHeight=12` with promotion probability `p=0.25`, which supports roughly 16 million entries. Each node stores an internal key and a `kv.Value`, with forward pointers at each level.
 
 The skip list is not thread-safe by itself. The `Memtable` wrapper holds a `sync.RWMutex` — writes take the exclusive lock, reads take the shared lock. Iterators hold the read lock for their entire lifetime and release it on `Close()`. This means scans block writes, but since a memtable is typically at most 64MB, scans are fast. And for the important case — flushing a frozen memtable to an SSTable — the memtable is immutable, so there's no contention at all.
 
@@ -174,7 +174,7 @@ A crash at any step is safe: step 1-2 leaves a `.tmp` file (cleaned up on startu
 
 In an LSM tree, deletes don't remove data immediately. Instead, a tombstone marker is written. The actual removal happens during compaction, once the tombstone has propagated below all older versions of the key.
 
-LithicDB uses a `kv.Value` type with an explicit `Tombstone` flag rather than encoding tombstones as empty values. This keeps the semantics unambiguous: an empty value is a legitimate value, not a deletion. The distinction matters in compaction (tombstones can be dropped once they've propagated), in MVCC (a snapshot needs to know "this key was deleted at this point in time"), and at every point in the read path where the engine decides what to return.
+Theseon uses a `kv.Value` type with an explicit `Tombstone` flag rather than encoding tombstones as empty values. This keeps the semantics unambiguous: an empty value is a legitimate value, not a deletion. The distinction matters in compaction (tombstones can be dropped once they've propagated), in MVCC (a snapshot needs to know "this key was deleted at this point in time"), and at every point in the read path where the engine decides what to return.
 
 ## What I Learned
 
@@ -188,4 +188,4 @@ The bloom filter was simpler to implement than I expected. The LevelDB approach 
 
 *The next post covers the integration layer: internal key encoding with sequence numbers, the merge iterator, and how everything gets wired into a working engine.*
 
-*LithicDB is open source at [github.com/ulixert/lithicdb](https://github.com/ulixert/lithicdb).*
+*Theseon is open source at [github.com/ulixert/theseon](https://github.com/ulixert/theseon).*

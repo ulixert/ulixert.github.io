@@ -1,12 +1,12 @@
 ---
 title: "Snapshots, Transactions, and the Art of Not Blocking Writers"
-description: "How LithicDB gained MVCC snapshot isolation and optimistic transactions — by separating merge from dedup and making versioning a first-class feature."
+description: "How Theseon gained MVCC snapshot isolation and optimistic transactions — by separating merge from dedup and making versioning a first-class feature."
 publishDate: "2026-03-22"
 updatedDate: "2026-03-22"
-tags: ["go", "databases", "lsm-tree", "lithicdb", "mvcc", "transactions", "snapshot-isolation"]
+tags: ["go", "databases", "lsm-tree", "theseon", "mvcc", "transactions", "snapshot-isolation"]
 ---
 
-At the end of the [last post](/posts/lithicdb-self-maintaining/), LithicDB was a self-maintaining storage engine: manifest-backed persistence, leveled compaction, block cache, write batches, and backpressure. But it treated multi-version keys as an implementation detail. `Get` always returned the absolute newest version. No snapshots, no transactions, no way to read a consistent view of the data while writes are happening.
+At the end of the [last post](/posts/theseon-self-maintaining/), Theseon was a self-maintaining storage engine: manifest-backed persistence, leveled compaction, block cache, write batches, and backpressure. But it treated multi-version keys as an implementation detail. `Get` always returned the absolute newest version. No snapshots, no transactions, no way to read a consistent view of the data while writes are happening.
 
 This post covers the changes that made versioning a first-class feature: refactoring the iterator stack, building snapshot isolation, teaching compaction to respect active readers, and adding optimistic transactions with conflict detection.
 
@@ -180,11 +180,11 @@ The single-node engine is feature-complete: durable writes, leveled compaction, 
 
 ---
 
-*LithicDB is open source at [github.com/ulixert/lithicdb](https://github.com/ulixert/lithicdb).*
+*Theseon is open source at [github.com/ulixert/theseon](https://github.com/ulixert/theseon).*
 
 **References:**
 
 - Berenson, H., Bernstein, P., et al. (1995). *A Critique of ANSI SQL Isolation Levels*. SIGMOD '95. The paper that clarified snapshot isolation vs. serializable, and defined write skew.
-- Peng, D., & Dabek, F. (2010). *Large-scale Incremental Processing Using Distributed Transactions and Notifications*. OSDI '10. Percolator's model — distributed transactions on top of versioned key-value storage — informed the design even though LithicDB's transactions are local.
+- Peng, D., & Dabek, F. (2010). *Large-scale Incremental Processing Using Distributed Transactions and Notifications*. OSDI '10. Percolator's model — distributed transactions on top of versioned key-value storage — informed the design even though Theseon's transactions are local.
 - [Badger Transactions](https://dgraph.io/docs/badger/get-started/#using-transactions) — Badger's optimistic transaction API and conflict detection approach.
 - [CockroachDB MVCC](https://www.cockroachlabs.com/docs/stable/architecture/storage-layer.html) — how Pebble's MVCC layer interacts with CockroachDB's transaction protocol.

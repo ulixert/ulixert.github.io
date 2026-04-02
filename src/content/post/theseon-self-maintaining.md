@@ -1,18 +1,18 @@
 ---
 title: "Making the Engine Self-Maintaining: Compaction, Caching, and Durability"
-description: "How the manifest, leveled compaction, block cache, and write batches turned LithicDB into a self-maintaining storage engine."
+description: "How the manifest, leveled compaction, block cache, and write batches turned Theseon into a self-maintaining storage engine."
 publishDate: "2026-03-18"
 updatedDate: "2026-03-22"
-tags: ["go", "databases", "lsm-tree", "lithicdb", "compaction", "manifest", "caching", "mmap"]
+tags: ["go", "databases", "lsm-tree", "theseon", "compaction", "manifest", "caching", "mmap"]
 ---
 
-At the end of the [last post](/posts/lithicdb-wiring-it-together/), [LithicDB](https://github.com/ulixert/lithicdb) could write keys, flush memtables to SSTables, and recover from crashes via the WAL. It worked, but it had two problems that made it useless for anything beyond a demo:
+At the end of the [last post](/posts/theseon-wiring-it-together/), [Theseon](https://github.com/ulixert/theseon) could write keys, flush memtables to SSTables, and recover from crashes via the WAL. It worked, but it had two problems that made it useless for anything beyond a demo:
 
 1. **Flushed data disappeared on restart.** The engine wrote SSTables to disk, then deleted the WAL. On restart, it had no record of those SSTables. The data was sitting right there in `.sst` files, invisible.
 
 2. **L0 grew without bound.** Every flush added another SSTable to L0. Nothing ever cleaned up. After enough writes, point lookups degraded linearly — a `Get` that missed bloom filters on 100 L0 files did 100 block reads.
 
-This post covers everything that turned LithicDB from a working prototype into a self-maintaining storage engine: a manifest for persistent state, leveled compaction, a block cache, write batches, backpressure, and benchmarks to prove it all works.
+This post covers everything that turned Theseon from a working prototype into a self-maintaining storage engine: a manifest for persistent state, leveled compaction, a block cache, write batches, backpressure, and benchmarks to prove it all works.
 
 ## The Manifest
 
@@ -315,19 +315,19 @@ A few things worth noting.
 
 The engine can now manage its own disk layout, cache hot data, batch writes, bound memory usage under sustained load, and manage memory efficiently via mmap. The next milestone is MVCC — timestamped keys, snapshot isolation, and optimistic transactions. The groundwork is already in place: internal keys carry sequence numbers from the beginning, and the key encoding sorts multiple versions of the same user key newest-first. No format migration needed.
 
-The [next post](/posts/lithicdb-mvcc-transactions/) covers how that went — including the iterator refactor that unlocked three features at once.
+The [next post](/posts/theseon-mvcc-transactions/) covers how that went — including the iterator refactor that unlocked three features at once.
 
 ---
 
-*LithicDB is open source at [github.com/ulixert/lithicdb](https://github.com/ulixert/lithicdb).*
+*Theseon is open source at [github.com/ulixert/theseon](https://github.com/ulixert/theseon).*
 
 **References:**
 
 - O'Neil, P., Cheng, E., Gawlick, D., & O'Neil, E. (1996). *The Log-Structured Merge-Tree (LSM-Tree)*. Acta Informatica, 33(4), 351–385.
 - Luo, C., & Carey, M. J. (2020). *LSM-based Storage Techniques: A Survey*. VLDB Journal, 29(1).
-- [LevelDB implementation notes](https://github.com/google/leveldb/blob/main/doc/impl.md) — manifest format, compaction strategy, and recovery. LithicDB's manifest design and leveled compaction follow LevelDB's approach closely.
+- [LevelDB implementation notes](https://github.com/google/leveldb/blob/main/doc/impl.md) — manifest format, compaction strategy, and recovery. Theseon's manifest design and leveled compaction follow LevelDB's approach closely.
 - [RocksDB Wiki: Leveled Compaction](https://github.com/facebook/rocksdb/wiki/Leveled-Compaction) — the L0 trigger, size ratio between levels, and file picking strategy. RocksDB's documentation is the most thorough public explanation of how leveled compaction works in practice.
 - [RocksDB Wiki: Block Cache](https://github.com/facebook/rocksdb/wiki/Block-Cache) — sharded LRU design, cache key format, and the tradeoffs around caching index/filter blocks vs data blocks.
 - [RocksDB Wiki: Write Batch](https://github.com/facebook/rocksdb/wiki/WriteBatch) — atomic multi-key writes, WAL integration, and the single-fsync optimization.
-- [Pebble (CockroachDB)](https://github.com/cockroachdb/pebble) — reference-counted SSTables and deferred file deletion during compaction. Pebble's `TableHandle` lifecycle influenced LithicDB's approach to safe file deletion while iterators are active.
+- [Pebble (CockroachDB)](https://github.com/cockroachdb/pebble) — reference-counted SSTables and deferred file deletion during compaction. Pebble's `TableHandle` lifecycle influenced Theseon's approach to safe file deletion while iterators are active.
 - [Badger (Dgraph)](https://dgraph.io/blog/post/badger/) — Badger's design doc covers practical tradeoffs in LSM engine design, especially around value separation and compaction I/O.
