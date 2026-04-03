@@ -1,33 +1,19 @@
 ---
-title: "Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go"
-description: "Architecture, design decisions, and tradeoffs behind a hand-built distributed storage engine, and how it is extending into hybrid retrieval: from skip lists and SSTables to SWIM gossip, quorum coordination, and HNSW indexes."
+title: "Building Theseon: A Distributed Storage Engine with Vector Search, from Scratch in Go"
+description: "Architecture and design decisions behind a hand-built distributed LSM engine with HNSW vector search: from skip lists and SSTables to SWIM gossip, quorum coordination, and approximate nearest neighbors."
 publishDate: "2026-01-08"
 updatedDate: "2026-04-02"
-tags: [ "go", "databases", "lsm-tree", "theseon", "distributed-systems" ]
+tags: [ "go", "databases", "lsm-tree", "theseon", "distributed-systems", "vector-search" ]
 pinned: true
 ---
 
-[**Theseon**](https://github.com/ulixert/theseon) is a distributed LSM-tree key-value storage engine written in Go.
+[**Theseon**](https://github.com/ulixert/theseon) is a distributed LSM-tree storage engine with vector search, built from scratch in Go.
 
-At its core, it is a storage and replication project: skip list memtable, write-ahead log, SSTable format with bloom
-filters and checksums, leveled compaction, snapshot isolation, optimistic transactions, consistent hashing, hybrid
-logical clocks, SWIM gossip, quorum coordination, hinted handoff, and anti-entropy.
+The storage and distributed layers are the foundation: skip list memtable, write-ahead log, SSTable format with bloom filters and checksums, leveled compaction, snapshot isolation, optimistic transactions, consistent hashing, hybrid logical clocks, SWIM gossip, quorum coordination, hinted handoff, and anti-entropy. The vector layer extends it into a hybrid search engine: HNSW graphs for approximate nearest neighbors, product quantization for compression, BM25 for lexical matching, and exact re-ranking on raw vectors.
 
-The retrieval layer is the newer extension, not the center of this post. It is the reason the project evolved beyond a
-pure storage engine: HNSW for ANN search, product quantization for compression, BM25 for lexical retrieval, and exact
-re-ranking on raw vectors.
+"Theseon" comes from the Greek *Theseion* — the Temple of Hephaestus in Athens, one of the best-preserved ancient structures. It also evokes Theseus navigating the labyrinth, which is roughly what HNSW does: traversing layers of connections to find nearby vectors.
 
-> "Theseon" comes from the Greek *Theseion* — the Temple of Hephaestus in Athens, one of the best-preserved ancient
-> structures. It also evokes Theseus navigating the labyrinth, which maps well to what the HNSW graph does: traversing
-> layers of connections to find nearby vectors. The name reflects the project's evolution from a pure storage engine
-> into something that also navigates high-dimensional space.
-
-This post is mainly about the architecture of the storage engine and distributed system, with the retrieval layer shown
-as the extension that changed the project's direction. The rest of the series digs into implementation details.
-
-**Note:** This project was originally called LithicDB ("lithic" from Greek *lithos*, stone — writes arriving in layers,
-compacting like sediment into rock). The rename to Theseon reflects the addition of the retrieval layer and the broader
-identity that came with it.
+This post covers the architecture and the design decisions that shaped it. The rest of the series digs into implementation details.
 
 ## Why an LSM Tree?
 
@@ -136,14 +122,12 @@ Key components of the distributed layer:
 - **Anti-entropy** with Merkle trees periodically compares replica digests and repairs any remaining drift that read
   repair and hinted handoff missed.
 
-### Retrieval Layer
+### Vector layer
 
-The top layer adds vector search and hybrid retrieval on top of the distributed KV store. Vectors are stored as
-regular KV entries (prefix `0x02`), which means hinted handoff and anti-entropy replicate vector data for free — no
-special vector replication protocol is needed.
+The top layer adds vector search on top of the distributed KV store. Vectors are stored as regular KV entries (prefix `0x02`), which means hinted handoff and anti-entropy replicate vector data for free — no special vector replication protocol.
 
 ```text
-Query: "fast storage" + [0.12, -0.45, ...]
+                    Query: "fast storage" + [0.12, -0.45, ...]
                                           │
                                           ▼
                                 ┌───────────────────┐
@@ -279,21 +263,17 @@ is read from the mmap'd region (or the block cache if recently accessed).
 
 In a well-compacted database, a point lookup touches one or two disk blocks at most.
 
-## Implementation Philosophy
+## What "From Scratch" Means
 
-I do not mean "no dependencies at all." I use Go's standard library, gRPC for networking, and protobuf for
-serialization. What I do mean is that the storage engine and the distributed primitives are my own: memtable, WAL,
-SSTable format, bloom filter, compaction, manifest, MVCC, snapshot isolation, transactions, consistent hashing, HLC,
-SWIM gossip, quorum coordination, read repair, hinted handoff, and Merkle-tree anti-entropy.
+Not "no dependencies at all." I use Go's standard library, gRPC for networking, and protobuf for serialization. What it means is that every storage, distributed, and vector primitive is mine: memtable, WAL, SSTable format, bloom filter, compaction, manifest, MVCC, snapshot isolation, transactions, consistent hashing, HLC, SWIM gossip, quorum coordination, read repair, hinted handoff, Merkle-tree anti-entropy, HNSW graph, product quantization, and BM25 scoring.
 
-Theseon is not a SQL database, not a Raft-based replicated store, and not an attempt to replace RocksDB. The goal is to
-build a serious distributed storage engine and understand where the real complexity lies — by implementing it.
+Theseon is not a SQL database, not a Raft-based replicated store, and not an attempt to replace RocksDB. The goal is to build a serious distributed storage engine with vector search and understand where the real complexity lies — by implementing it.
 
 ## The Rest of the Series
 
 Each post covers a layer of the system, building from the bottom up:
 
-1. **This post** — Architecture, design decisions, and an overview of the distributed and retrieval layers.
+1. **This post** — Architecture and design decisions across all three layers
 2. [**The Storage Foundation**](/posts/theseon-storage-foundation/) — Memtable, WAL, SSTable format, bloom filters, and
    the iterator contract
 3. [**Wiring It All Together**](/posts/theseon-wiring-it-together/) — Internal key encoding, the merge iterator, write
@@ -306,6 +286,8 @@ Each post covers a layer of the system, building from the bottom up:
    incarnation-based CRDT merge, gossip dissemination, and decoupling liveness from ring ownership
 7. [**Quorum Reads, Quorum Writes, and the Repair That Follows**](/posts/theseon-quorum-coordinator/) — Coordinator
    fan-out, quorum latency, two-phase read repair, and the bugs in testing impossible states
+8. **Building HNSW from Scratch** *(coming soon)* — Graph construction, beam search, neighbor selection heuristics,
+   tombstone-aware traversal, and what recall@k actually measures
 
 ## References
 
@@ -341,3 +323,7 @@ Each post covers a layer of the system, building from the bottom up:
   iterator lifecycle, block cache sharding, and compaction picker/executor separation.
 - [Badger](https://github.com/dgraph-io/badger) — Dgraph's Go key-value store. Reference for MVCC design and transaction
   API.
+
+---
+
+*This project was originally called LithicDB. The rename to Theseon happened when the vector layer changed the project's scope beyond a pure storage engine.*
