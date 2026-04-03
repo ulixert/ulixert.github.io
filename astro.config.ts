@@ -23,7 +23,7 @@ import { expressiveCodeOptions, siteConfig } from "./src/site.config";
 export default defineConfig({
 	site: siteConfig.url,
 	redirects: {
-		"/intro/": "/posts/building-theseon/",
+		"/theseon/": "/posts/building-theseon/",
 	},
 	image: {
 		domains: ["webmention.io"],
