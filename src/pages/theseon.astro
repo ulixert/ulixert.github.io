@@ -1,0 +1,22 @@
+---
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0;url=/posts/building-theseon/">
+    <title>Theseon</title>
+    <script is:inline>
+        const lightModePref = window.matchMedia("(prefers-color-scheme: light)");
+        const storedTheme = typeof localStorage !== "undefined" && localStorage.getItem("theme");
+        const theme = storedTheme || (lightModePref.matches ? "light" : "dark");
+        
+        // Match the exact background colors from your global.css
+        document.body.style.backgroundColor = (theme === 'dark') ? '#1d1f21' : '#fbfbfb';
+        
+        window.location.href = '/posts/building-theseon/';
+    </script>
+</head>
+<body style="margin: 0;">
+</body>
+</html>
