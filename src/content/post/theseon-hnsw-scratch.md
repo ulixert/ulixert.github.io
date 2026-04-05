@@ -153,25 +153,25 @@ neighbors. If a neighbor is closer than the worst current result (or results are
 
 ```go
 for candidates.Len() > 0 {
-c := heap.Pop(candidates) // closest unexplored
+    c := heap.Pop(candidates) // closest unexplored
 
-if results.Len() >= ef && c.dist > results.peek().dist {
-break // remaining candidates only farther
-}
+    if results.Len() >= ef && c.dist > results.peek().dist {
+         break // remaining candidates only farther
+    }
 
-for _, neighbor := range node.Neighbors[layer] {
-if visited[neighbor] { continue }
-visited[neighbor] = true
+    for _, neighbor := range node.Neighbors[layer] {
+         if visited[neighbor] { continue }
+         visited[neighbor] = true
 
-d := dist(query, neighbor.Vector)
-if results.Len() < ef || d < results.peek().dist {
-heap.Push(candidates, neighbor)
-heap.Push(results, neighbor)
-if results.Len() > ef {
-heap.Pop(results) // evict farthest
-}
-}
-}
+         d := dist(query, neighbor.Vector)
+         if results.Len() < ef || d < results.peek().dist {
+             heap.Push(candidates, neighbor)
+             heap.Push(results, neighbor)
+             if results.Len() > ef {
+                 heap.Pop(results) // evict farthest
+             }
+         }
+    }
 }
 ```
 
