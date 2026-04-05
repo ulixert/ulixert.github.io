@@ -4,6 +4,7 @@ description: "A deep dive into the bottom half of the Theseon stack: data struct
 publishDate: "2026-03-12"
 updatedDate: "2026-03-12"
 tags: ["go", "databases", "lsm-tree", "theseon", "storage-foundation"]
+order: 2
 ---
 
 This is the second post in my series on building [Theseon](https://github.com/ulixert/theseon), a distributed LSM storage engine in Go. The [first post](https://ulixert.github.io/posts/building-theseon/) covered why I'm building it and what the architecture looks like. This post covers the bottom half of the stack: the data structures and on-disk formats that everything else is built on.

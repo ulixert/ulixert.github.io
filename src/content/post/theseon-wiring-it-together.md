@@ -4,6 +4,7 @@ description: "How the storage foundation pieces are wired into a working engine,
 publishDate: "2026-03-15"
 updatedDate: "2026-03-15"
 tags: ["go", "databases", "lsm-tree", "theseon", "merge-iterator"]
+order: 3
 ---
 
 This is the third post in my series on building [Theseon](https://github.com/ulixert/theseon). The [previous post](/posts/theseon-storage-foundation/) covered the building blocks: memtable, WAL, and SSTables. This post covers the decision that reshaped the project mid-build, the merge iterator that ties everything together, and the bugs I caught along the way.

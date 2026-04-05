@@ -4,6 +4,7 @@ description: "How Theseon detects node failures without a leader — implementin
 publishDate: "2026-03-29"
 updatedDate: "2026-03-29"
 tags: ["go", "databases", "theseon", "distributed-systems", "swim", "gossip", "failure-detection"]
+order: 6
 ---
 
 At the end of the [last post](/posts/theseon-mvcc-transactions/), Theseon was a complete single-node storage engine. This post starts the distributed layer. Before quorum reads, replicated writes, or anti-entropy repair, the cluster needs to answer a more basic question: *who's alive?*

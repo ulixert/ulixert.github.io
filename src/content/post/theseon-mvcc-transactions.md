@@ -4,6 +4,7 @@ description: "How Theseon gained MVCC snapshot isolation and optimistic transact
 publishDate: "2026-03-22"
 updatedDate: "2026-03-22"
 tags: ["go", "databases", "lsm-tree", "theseon", "mvcc", "transactions", "snapshot-isolation"]
+order: 5
 ---
 
 At the end of the [last post](/posts/theseon-self-maintaining/), Theseon was a self-maintaining storage engine: manifest-backed persistence, leveled compaction, block cache, write batches, and backpressure. But it treated multi-version keys as an implementation detail. `Get` always returned the absolute newest version. No snapshots, no transactions, no way to read a consistent view of the data while writes are happening.

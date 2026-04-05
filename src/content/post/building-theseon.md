@@ -1,10 +1,11 @@
 ---
-title: "Building Theseon: A Distributed Storage Engine with Vector Search, from Scratch in Go"
+title: "Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go"
 description: "Architecture and design decisions behind a hand-built distributed LSM engine with HNSW vector search: from skip lists and SSTables to SWIM gossip, quorum coordination, and approximate nearest neighbors."
 publishDate: "2026-01-08"
 updatedDate: "2026-04-02"
 tags: [ "go", "databases", "lsm-tree", "theseon", "distributed-systems", "vector-search" ]
 pinned: true
+order: 1
 ---
 
 [**Theseon**](https://github.com/ulixert/theseon) is a distributed LSM-tree storage engine with vector search, built from scratch in Go.
@@ -286,8 +287,10 @@ Each post covers a layer of the system, building from the bottom up:
    incarnation-based CRDT merge, gossip dissemination, and decoupling liveness from ring ownership
 7. [**Quorum Reads, Quorum Writes, and the Repair That Follows**](/posts/theseon-quorum-coordinator/) — Coordinator
    fan-out, quorum latency, two-phase read repair, and the bugs in testing impossible states
-8. **Building HNSW from Scratch** *(coming soon)* — Graph construction, beam search, neighbor selection heuristics,
-   tombstone-aware traversal, and what recall@k actually measures
+8. **Product Quantization** *(coming soon)*
+9. **Hybrid Retrieval and Reranking** *(coming soon)*
+10. [**Building HNSW from Scratch**](/posts/theseon-hnsw-scratch/) — Graph construction, beam search, neighbor selection
+    heuristics, and recall evaluation
 
 ## References
 

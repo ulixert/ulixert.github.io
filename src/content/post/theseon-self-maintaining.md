@@ -4,6 +4,7 @@ description: "How the manifest, leveled compaction, block cache, and write batch
 publishDate: "2026-03-18"
 updatedDate: "2026-03-22"
 tags: ["go", "databases", "lsm-tree", "theseon", "compaction", "manifest", "caching", "mmap"]
+order: 4
 ---
 
 At the end of the [last post](/posts/theseon-wiring-it-together/), [Theseon](https://github.com/ulixert/theseon) could write keys, flush memtables to SSTables, and recover from crashes via the WAL. It worked, but it had two problems that made it useless for anything beyond a demo:

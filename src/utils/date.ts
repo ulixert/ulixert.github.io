@@ -19,5 +19,11 @@ export function collectionDateSort(
 	a: CollectionEntry<"post" | "note">,
 	b: CollectionEntry<"post" | "note">,
 ) {
+	if ("order" in a.data && "order" in b.data) {
+		if (a.data.order !== undefined && b.data.order !== undefined) {
+			return b.data.order - a.data.order;
+		}
+	}
+
 	return b.data.publishDate.getTime() - a.data.publishDate.getTime();
 }

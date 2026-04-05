@@ -4,6 +4,7 @@ description: "How Theseon's coordinator fans out operations to replicas, resolve
 publishDate: "2026-03-31"
 updatedDate: "2026-03-31"
 tags: ["go", "databases", "theseon", "distributed-systems", "quorum", "read-repair", "coordinator"]
+order: 7
 ---
 
 At the end of the [last post](/posts/theseon-swim-protocol/), the cluster could detect failures and propagate membership changes. Every node had a local view of who's alive. But that's infrastructure — it doesn't serve reads or writes yet.
