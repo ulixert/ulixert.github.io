@@ -291,6 +291,8 @@ Each post covers a layer of the system, building from the bottom up:
 9. **Hybrid Retrieval and Reranking** *(coming soon)*
 10. [**Building HNSW from Scratch**](/posts/theseon-hnsw-scratch/) — Graph construction, beam search, neighbor selection
     heuristics, and recall evaluation
+11. [**Making Vectors Durable**](/posts/theseon-vector-kv-integration/) — KV integration, snapshot persistence, and the
+    bugs in concurrent updates and graph connectivity
 
 ## References
 

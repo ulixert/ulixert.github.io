@@ -1,8 +1,8 @@
 ---
 title: "Building HNSW from Scratch: Graph Construction, Beam Search, and What Recall Actually Measures"
 description: "Implementing the HNSW approximate nearest neighbor algorithm from the original paper in Go — the insert and search algorithms, neighbor selection heuristics, tombstone-aware traversal, and building an evaluation framework to prove it works."
-publishDate: "2026-04-05"
-updatedDate: "2026-04-05"
+publishDate: "2026-04-04"
+updatedDate: "2026-04-04"
 tags: [ "go", "databases", "theseon", "vector-search", "hnsw", "approximate-nearest-neighbors" ]
 order: 10
 ---
