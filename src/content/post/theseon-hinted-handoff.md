@@ -1,8 +1,8 @@
 ---
 title: "Buffering Writes for Dead Replicas: Hinted Handoff"
 description: "How Theseon stores writes destined for dead nodes and replays them on recovery — the capacity accounting race, the iterator deadlock, and why skipping fsync is the right call for ephemeral data."
-publishDate: "2026-04-07"
-updatedDate: "2026-04-07"
+publishDate: "2026-04-09"
+updatedDate: "2026-04-09"
 tags: ["go", "databases", "theseon", "distributed-systems", "hinted-handoff", "replication", "consistency"]
 order: 8
 ---
