@@ -229,6 +229,26 @@ The TOCTOU bug in `flushImmutables` was humbling. The fix was trivial (read leng
 
 ---
 
+### Read next
+[**Making the Engine Self-Maintaining**](/posts/theseon-self-maintaining/)
+
+---
+
+### In this series
+1. [Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go](/posts/building-theseon/)
+2. [The Storage Foundation](/posts/theseon-storage-foundation/)
+3. **Wiring It All Together**
+4. [Making the Engine Self-Maintaining](/posts/theseon-self-maintaining/)
+5. [Snapshots, Transactions, and the Art of Not Blocking Writers](/posts/theseon-mvcc-transactions/)
+6. [Who's Alive? Building SWIM Failure Detection from Scratch](/posts/theseon-swim-protocol/)
+7. [Quorum Reads, Quorum Writes, and the Repair That Follows](/posts/theseon-quorum-coordinator/)
+8. [Buffering Writes for Dead Replicas: Hinted Handoff](/posts/theseon-hinted-handoff/)
+9. [Building HNSW from Scratch](/posts/theseon-hnsw-scratch/)
+10. [Making Vectors Durable](/posts/theseon-vector-kv-integration/)
+11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
+
+---
+
 *The codebase is tagged `v0.1.0` at this point. Next up: the manifest file and leveled compaction — the parts that make an LSM tree actually manage its disk layout instead of just growing forever.*
 
 *Theseon is open source at [github.com/ulixert/theseon](https://github.com/ulixert/theseon).*

@@ -275,24 +275,36 @@ Theseon is not a SQL database, not a Raft-based replicated store, and not an att
 Each post covers a layer of the system, building from the bottom up:
 
 1. **This post** — Architecture and design decisions across all three layers
-2. [**The Storage Foundation**](/posts/theseon-storage-foundation/) — Memtable, WAL, SSTable format, bloom filters, and
-   the iterator contract
-3. [**Wiring It All Together**](/posts/theseon-wiring-it-together/) — Internal key encoding, the merge iterator, write
-   path, flush, and crash recovery
-4. [**Making the Engine Self-Maintaining**](/posts/theseon-self-maintaining/) — Manifest, leveled compaction, block
-   cache, mmap, write batches, and backpressure
-5. [**Snapshots, Transactions, and the Art of Not Blocking Writers**](/posts/theseon-mvcc-transactions/) — MVCC,
-   snapshot isolation, optimistic transactions, and version-aware compaction GC
-6. [**Who's Alive? Building SWIM Failure Detection from Scratch**](/posts/theseon-swim-protocol/) — SWIM probe cycle,
-   incarnation-based CRDT merge, gossip dissemination, and decoupling liveness from ring ownership
-7. [**Quorum Reads, Quorum Writes, and the Repair That Follows**](/posts/theseon-quorum-coordinator/) — Coordinator
-   fan-out, quorum latency, two-phase read repair, and the bugs in testing impossible states
-8. **Product Quantization** *(coming soon)*
-9. **Hybrid Retrieval and Reranking** *(coming soon)*
-10. [**Building HNSW from Scratch**](/posts/theseon-hnsw-scratch/) — Graph construction, beam search, neighbor selection
-    heuristics, and recall evaluation
-11. [**Making Vectors Durable**](/posts/theseon-vector-kv-integration/) — KV integration, snapshot persistence, and the
-    bugs in concurrent updates and graph connectivity
+2. [**The Storage Foundation**](/posts/theseon-storage-foundation/) — Memtable, WAL, SSTable format, bloom filters, and the iterator contract
+3. [**Wiring It All Together**](/posts/theseon-wiring-it-together/) — Internal key encoding, the merge iterator, write path, flush, and crash recovery
+4. [**Making the Engine Self-Maintaining**](/posts/theseon-self-maintaining/) — Manifest, leveled compaction, block cache, mmap, write batches, and backpressure
+5. [**Snapshots, Transactions, and the Art of Not Blocking Writers**](/posts/theseon-mvcc-transactions/) — MVCC, snapshot isolation, optimistic transactions, and version-aware compaction GC
+6. [**Who's Alive? Building SWIM Failure Detection from Scratch**](/posts/theseon-swim-protocol/) — SWIM probe cycle, incarnation-based CRDT merge, gossip dissemination, and decoupling liveness from ring ownership
+7. [**Quorum Reads, Quorum Writes, and the Repair That Follows**](/posts/theseon-quorum-coordinator/) — Coordinator fan-out, quorum latency, two-phase read repair, and the bugs in testing impossible states
+8. [**Buffering Writes for Dead Replicas: Hinted Handoff**](/posts/theseon-hinted-handoff/) — Capacity accounting races, iterator deadlocks, and WAL sync decisions
+9. [**Building HNSW from Scratch**](/posts/theseon-hnsw-scratch/) — Graph construction, beam search, neighbor selection heuristics, and recall evaluation
+10. [**Making Vectors Durable**](/posts/theseon-vector-kv-integration/) — KV integration, snapshot persistence, and the bugs in concurrent updates and graph connectivity
+11. [**Fan-Out, Merge, Repair: Distributed Vector Search**](/posts/theseon-distributed-vector-search/) — Collection-name ring routing, exact reranking, and provenance-tracked read repair
+
+---
+
+### Read next
+[**The Storage Foundation**](/posts/theseon-storage-foundation/)
+
+---
+
+### In this series
+1. **Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go**
+2. [The Storage Foundation](/posts/theseon-storage-foundation/)
+3. [Wiring It All Together](/posts/theseon-wiring-it-together/)
+4. [Making the Engine Self-Maintaining](/posts/theseon-self-maintaining/)
+5. [Snapshots, Transactions, and the Art of Not Blocking Writers](/posts/theseon-mvcc-transactions/)
+6. [Who's Alive? Building SWIM Failure Detection from Scratch](/posts/theseon-swim-protocol/)
+7. [Quorum Reads, Quorum Writes, and the Repair That Follows](/posts/theseon-quorum-coordinator/)
+8. [Buffering Writes for Dead Replicas: Hinted Handoff](/posts/theseon-hinted-handoff/)
+9. [Building HNSW from Scratch](/posts/theseon-hnsw-scratch/)
+10. [Making Vectors Durable](/posts/theseon-vector-kv-integration/)
+11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
 
 ## References
 

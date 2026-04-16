@@ -217,6 +217,26 @@ Hinted handoff handles the fast case: a node dies, comes back quickly, and recei
 
 ---
 
+### Read next
+[**Building HNSW from Scratch**](/posts/theseon-hnsw-scratch/)
+
+---
+
+### In this series
+1. [Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go](/posts/building-theseon/)
+2. [The Storage Foundation](/posts/theseon-storage-foundation/)
+3. [Wiring It All Together](/posts/theseon-wiring-it-together/)
+4. [Making the Engine Self-Maintaining](/posts/theseon-self-maintaining/)
+5. [Snapshots, Transactions, and the Art of Not Blocking Writers](/posts/theseon-mvcc-transactions/)
+6. [Who's Alive? Building SWIM Failure Detection from Scratch](/posts/theseon-swim-protocol/)
+7. [Quorum Reads, Quorum Writes, and the Repair That Follows](/posts/theseon-quorum-coordinator/)
+8. **Buffering Writes for Dead Replicas: Hinted Handoff**
+9. [Building HNSW from Scratch](/posts/theseon-hnsw-scratch/)
+10. [Making Vectors Durable](/posts/theseon-vector-kv-integration/)
+11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
+
+---
+
 *Theseon is open source at [github.com/ulixert/theseon](https://github.com/ulixert/theseon).*
 
 **References:**
