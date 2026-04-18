@@ -4,7 +4,7 @@ description: "How Theseon routes a vector search across replicas — collection-
 publishDate: "2026-04-14"
 updatedDate: "2026-04-14"
 tags: ["go", "databases", "theseon", "distributed-systems", "vector-search", "hnsw", "replication", "grpc"]
-order: 12
+order: 11
 ---
 
 The [last post](/posts/theseon-hinted-handoff/) built hinted handoff: when a replica is dead, the coordinator buffers writes and replays them on recovery. That completed the distributed KV layer — quorum reads, quorum writes, HLC timestamps, hinted handoff, all wired together. But there was no distributed *vector search*. A client could write vectors through the coordinator, but searching meant calling a single node directly. If your collection was replicated across three nodes, you had to pick one and hope its HNSW graph was up to date.
@@ -248,6 +248,11 @@ After that, the node orchestrator: orchestrated collection creation across repli
 
 ---
 
+### Read next
+[**Starting, Joining, Activating: The Node Orchestrator**](/posts/theseon-node-orchestrator/)
+
+---
+
 ### In this series
 1. [Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go](/posts/building-theseon/)
 2. [The Storage Foundation](/posts/theseon-storage-foundation/)
@@ -260,6 +265,7 @@ After that, the node orchestrator: orchestrated collection creation across repli
 9. [Building HNSW from Scratch](/posts/theseon-hnsw-scratch/)
 10. [Making Vectors Durable](/posts/theseon-vector-kv-integration/)
 11. **Fan-Out, Merge, Repair: Distributed Vector Search**
+12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
 
 ---
 

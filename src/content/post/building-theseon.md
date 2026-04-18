@@ -285,6 +285,7 @@ Each post covers a layer of the system, building from the bottom up:
 9. [**Building HNSW from Scratch**](/posts/theseon-hnsw-scratch/) — Graph construction, beam search, neighbor selection heuristics, and recall evaluation
 10. [**Making Vectors Durable**](/posts/theseon-vector-kv-integration/) — KV integration, snapshot persistence, and the bugs in concurrent updates and graph connectivity
 11. [**Fan-Out, Merge, Repair: Distributed Vector Search**](/posts/theseon-distributed-vector-search/) — Collection-name ring routing, exact reranking, and provenance-tracked read repair
+12. [**Starting, Joining, Activating: The Node Orchestrator**](/posts/theseon-node-orchestrator/) — Startup orchestration, the voter/learner split for join safety, and atomic ring rebuilds
 
 ---
 
@@ -305,6 +306,7 @@ Each post covers a layer of the system, building from the bottom up:
 9. [Building HNSW from Scratch](/posts/theseon-hnsw-scratch/)
 10. [Making Vectors Durable](/posts/theseon-vector-kv-integration/)
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
+12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
 
 ## References
 

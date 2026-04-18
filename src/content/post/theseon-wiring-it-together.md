@@ -246,6 +246,7 @@ The TOCTOU bug in `flushImmutables` was humbling. The fix was trivial (read leng
 9. [Building HNSW from Scratch](/posts/theseon-hnsw-scratch/)
 10. [Making Vectors Durable](/posts/theseon-vector-kv-integration/)
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
+12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
 
 ---
 

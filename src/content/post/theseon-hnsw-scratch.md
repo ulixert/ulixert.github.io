@@ -4,7 +4,7 @@ description: "Implementing the HNSW approximate nearest neighbor algorithm from 
 publishDate: "2026-04-04"
 updatedDate: "2026-04-04"
 tags: [ "go", "databases", "theseon", "vector-search", "hnsw", "approximate-nearest-neighbors" ]
-order: 10
+order: 9
 ---
 
 The previous posts built Theseon's storage engine and distributed layer — from the LSM write path through SWIM gossip,
@@ -311,4 +311,6 @@ replicas.
 - [hnswlib](https://github.com/nmslib/hnswlib) — The reference C++ implementation by the paper authors. Informed the
   decision to use the heuristic only for initial selection, not overflow pruning.
 - [ANN Benchmarks](https://ann-benchmarks.com/) — Standard benchmark suite for approximate nearest neighbor algorithms.
+  Context for understanding where HNSW sits in the performance landscape.
+e nearest neighbor algorithms.
   Context for understanding where HNSW sits in the performance landscape.

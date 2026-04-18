@@ -4,7 +4,7 @@ description: "Storing HNSW vectors as regular LSM entries in Theseon — the enc
 publishDate: "2026-04-07"
 updatedDate: "2026-04-07"
 tags: [ "go", "databases", "theseon", "vector-search", "hnsw", "lsm-tree" ]
-order: 11
+order: 10
 ---
 
 The [last post](/posts/theseon-hnsw-scratch/) built a standalone HNSW graph — insert, search, tombstone-aware beam
@@ -430,6 +430,7 @@ search across replicas via the existing coordinator.
 9. [Building HNSW from Scratch](/posts/theseon-hnsw-scratch/)
 10. **Making Vectors Durable**
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
+12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
 
 ---
 
