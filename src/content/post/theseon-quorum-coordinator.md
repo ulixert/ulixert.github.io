@@ -4,6 +4,8 @@ description: "How Theseon's coordinator fans out operations to replicas, resolve
 publishDate: "2026-03-31"
 updatedDate: "2026-03-31"
 tags: ["go", "databases", "theseon", "distributed-systems", "quorum", "read-repair", "coordinator"]
+series: "Building Theseon"
+part: 7
 order: 7
 ---
 
@@ -248,8 +250,8 @@ Two holes remain. When a replica is dead during a write, the write is simply ski
 
 ### In this series
 1. [Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go](/posts/building-theseon/)
-2. [The Storage Foundation](/posts/theseon-storage-foundation/)
-3. [Wiring It All Together](/posts/theseon-wiring-it-together/)
+2. [Storage Foundation: SSTables, Memtables, and the WAL](/posts/theseon-storage-foundation/)
+3. [Sequence Numbers, the Merge Iterator, and Wiring It All Together](/posts/theseon-wiring-it-together/)
 4. [Making the Engine Self-Maintaining](/posts/theseon-self-maintaining/)
 5. [Snapshots, Transactions, and the Art of Not Blocking Writers](/posts/theseon-mvcc-transactions/)
 6. [Who's Alive? Building SWIM Failure Detection from Scratch](/posts/theseon-swim-protocol/)
@@ -259,6 +261,7 @@ Two holes remain. When a replica is dead during a write, the write is simply ski
 10. [Making Vectors Durable](/posts/theseon-vector-kv-integration/)
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
 12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
+13. [Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M](/posts/theseon-benchmarks/)
 
 ---
 

@@ -4,6 +4,8 @@ description: "How the storage foundation pieces are wired into a working engine,
 publishDate: "2026-03-15"
 updatedDate: "2026-03-15"
 tags: ["go", "databases", "lsm-tree", "theseon", "merge-iterator"]
+series: "Building Theseon"
+part: 3
 order: 3
 ---
 
@@ -236,8 +238,8 @@ The TOCTOU bug in `flushImmutables` was humbling. The fix was trivial (read leng
 
 ### In this series
 1. [Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go](/posts/building-theseon/)
-2. [The Storage Foundation](/posts/theseon-storage-foundation/)
-3. **Wiring It All Together**
+2. [Storage Foundation: SSTables, Memtables, and the WAL](/posts/theseon-storage-foundation/)
+3. **Sequence Numbers, the Merge Iterator, and Wiring It All Together**
 4. [Making the Engine Self-Maintaining](/posts/theseon-self-maintaining/)
 5. [Snapshots, Transactions, and the Art of Not Blocking Writers](/posts/theseon-mvcc-transactions/)
 6. [Who's Alive? Building SWIM Failure Detection from Scratch](/posts/theseon-swim-protocol/)
@@ -247,6 +249,7 @@ The TOCTOU bug in `flushImmutables` was humbling. The fix was trivial (read leng
 10. [Making Vectors Durable](/posts/theseon-vector-kv-integration/)
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
 12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
+13. [Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M](/posts/theseon-benchmarks/)
 
 ---
 

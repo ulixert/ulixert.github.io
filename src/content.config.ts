@@ -35,6 +35,8 @@ const post = defineCollection({
 				.transform((str) => (str ? new Date(str) : undefined)),
 			pinned: z.boolean().default(false),
 			order: z.number().optional(),
+			series: z.string().optional(),
+			part: z.number().optional(),
 		}),
 });
 

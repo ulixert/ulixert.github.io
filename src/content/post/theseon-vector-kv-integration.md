@@ -4,6 +4,8 @@ description: "Storing HNSW vectors as regular LSM entries in Theseon — the enc
 publishDate: "2026-04-07"
 updatedDate: "2026-04-07"
 tags: [ "go", "databases", "theseon", "vector-search", "hnsw", "lsm-tree" ]
+series: "Building Theseon"
+part: 10
 order: 10
 ---
 
@@ -319,7 +321,7 @@ rebuild.
 One early draft stored a `num_layers` byte alongside the `level` field in each node. Since `num_layers` always equals
 `level + 1`, this was purely redundant — it was there as a cross-check during deserialization. But byte-offset arithmetic
 already catches structural corruption (you'd read past the end of the node or into the header), and the whole-file CRC32
-catches bitrot. A validation field that only catches bugs in the serializer itself isn't worth the cost of an extra byte
+catch bitrot. A validation field that only catches bugs in the serializer itself isn't worth the cost of an extra byte
 per node.
 
 ### CRC32 scope
@@ -416,12 +418,10 @@ search across replicas via the existing coordinator.
 ### Read next
 [**Fan-Out, Merge, Repair: Distributed Vector Search**](/posts/theseon-distributed-vector-search/)
 
----
-
 ### In this series
 1. [Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go](/posts/building-theseon/)
-2. [The Storage Foundation](/posts/theseon-storage-foundation/)
-3. [Wiring It All Together](/posts/theseon-wiring-it-together/)
+2. [Storage Foundation: SSTables, Memtables, and the WAL](/posts/theseon-storage-foundation/)
+3. [Sequence Numbers, the Merge Iterator, and Wiring It All Together](/posts/theseon-wiring-it-together/)
 4. [Making the Engine Self-Maintaining](/posts/theseon-self-maintaining/)
 5. [Snapshots, Transactions, and the Art of Not Blocking Writers](/posts/theseon-mvcc-transactions/)
 6. [Who's Alive? Building SWIM Failure Detection from Scratch](/posts/theseon-swim-protocol/)
@@ -431,6 +431,7 @@ search across replicas via the existing coordinator.
 10. **Making Vectors Durable**
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
 12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
+13. [Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M](/posts/theseon-benchmarks/)
 
 ---
 

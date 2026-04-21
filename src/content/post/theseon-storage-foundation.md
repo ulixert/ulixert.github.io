@@ -4,6 +4,8 @@ description: "A deep dive into the bottom half of the Theseon stack: data struct
 publishDate: "2026-03-12"
 updatedDate: "2026-03-12"
 tags: ["go", "databases", "lsm-tree", "theseon", "storage-foundation"]
+series: "Building Theseon"
+part: 2
 order: 2
 ---
 
@@ -194,8 +196,8 @@ The bloom filter was simpler to implement than I expected. The LevelDB approach 
 
 ### In this series
 1. [Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go](/posts/building-theseon/)
-2. **The Storage Foundation**
-3. [Wiring It All Together](/posts/theseon-wiring-it-together/)
+2. **Storage Foundation: SSTables, Memtables, and the WAL**
+3. [Sequence Numbers, the Merge Iterator, and Wiring It All Together](/posts/theseon-wiring-it-together/)
 4. [Making the Engine Self-Maintaining](/posts/theseon-self-maintaining/)
 5. [Snapshots, Transactions, and the Art of Not Blocking Writers](/posts/theseon-mvcc-transactions/)
 6. [Who's Alive? Building SWIM Failure Detection from Scratch](/posts/theseon-swim-protocol/)
@@ -205,6 +207,7 @@ The bloom filter was simpler to implement than I expected. The LevelDB approach 
 10. [Making Vectors Durable](/posts/theseon-vector-kv-integration/)
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
 12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
+13. [Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M](/posts/theseon-benchmarks/)
 
 ---
 

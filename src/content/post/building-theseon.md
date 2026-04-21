@@ -5,6 +5,8 @@ publishDate: "2026-01-08"
 updatedDate: "2026-04-02"
 tags: [ "go", "databases", "lsm-tree", "theseon", "distributed-systems", "vector-search" ]
 pinned: true
+series: "Building Theseon"
+part: 1
 order: 1
 ---
 
@@ -296,8 +298,8 @@ Each post covers a layer of the system, building from the bottom up:
 
 ### In this series
 1. **Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go**
-2. [The Storage Foundation](/posts/theseon-storage-foundation/)
-3. [Wiring It All Together](/posts/theseon-wiring-it-together/)
+2. [Storage Foundation: SSTables, Memtables, and the WAL](/posts/theseon-storage-foundation/)
+3. [Sequence Numbers, the Merge Iterator, and Wiring It All Together](/posts/theseon-wiring-it-together/)
 4. [Making the Engine Self-Maintaining](/posts/theseon-self-maintaining/)
 5. [Snapshots, Transactions, and the Art of Not Blocking Writers](/posts/theseon-mvcc-transactions/)
 6. [Who's Alive? Building SWIM Failure Detection from Scratch](/posts/theseon-swim-protocol/)
@@ -307,6 +309,7 @@ Each post covers a layer of the system, building from the bottom up:
 10. [Making Vectors Durable](/posts/theseon-vector-kv-integration/)
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
 12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
+13. [Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M](/posts/theseon-benchmarks/)
 
 ## References
 

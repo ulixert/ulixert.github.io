@@ -4,6 +4,8 @@ description: "How Theseon goes from a pile of components to a runnable cluster â
 publishDate: "2026-04-17"
 updatedDate: "2026-04-17"
 tags: ["go", "databases", "theseon", "distributed-systems", "orchestration", "cli", "grpc"]
+series: "Building Theseon"
+part: 12
 order: 12
 ---
 
@@ -370,10 +372,13 @@ Second, data streaming on topology change. Right now a JOINING node receives liv
 
 ---
 
+### Read next
+[**Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M**](/posts/theseon-benchmarks/)
+
 ### In this series
 1. [Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go](/posts/building-theseon/)
-2. [The Storage Foundation](/posts/theseon-storage-foundation/)
-3. [Wiring It All Together](/posts/theseon-wiring-it-together/)
+2. [Storage Foundation: SSTables, Memtables, and the WAL](/posts/theseon-storage-foundation/)
+3. [Sequence Numbers, the Merge Iterator, and Wiring It All Together](/posts/theseon-wiring-it-together/)
 4. [Making the Engine Self-Maintaining](/posts/theseon-self-maintaining/)
 5. [Snapshots, Transactions, and the Art of Not Blocking Writers](/posts/theseon-mvcc-transactions/)
 6. [Who's Alive? Building SWIM Failure Detection from Scratch](/posts/theseon-swim-protocol/)
@@ -383,6 +388,7 @@ Second, data streaming on topology change. Right now a JOINING node receives liv
 10. [Making Vectors Durable](/posts/theseon-vector-kv-integration/)
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
 12. **Starting, Joining, Activating: The Node Orchestrator**
+13. [Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M](/posts/theseon-benchmarks/)
 
 ---
 
