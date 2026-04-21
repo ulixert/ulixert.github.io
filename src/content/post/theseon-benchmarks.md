@@ -17,11 +17,13 @@ what I was looking at.
 
 All code, CSVs, and scripts are in `benchmarks/` in the repo. You can re-run them.
 
-## TL;DR
+:::important[TL;DR]
 
 - **Single-node**: Theseon matches Pebble on read throughput (~430K ops/sec) when both engines are given identical cache budgets — the earlier "Theseon wins 3.6×" result turned out to be a cache-sizing artifact.
 - **Cluster & chaos**: a 3-node cluster sustains ~1.7K ops/sec on read-heavy workloads at N=3/W=2/R=2, and error rate returns to 0% within ~1 second of a killed-and-restarted node.
 - **Vector**: HNSW on SIFT-1M hits 95% recall@10 at ~830 QPS, about 100× behind hnswlib — SIMD on the distance kernel is the next bottleneck.
+
+:::
 
 ## What's in scope
 
