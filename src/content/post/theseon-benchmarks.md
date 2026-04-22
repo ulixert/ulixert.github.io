@@ -19,9 +19,10 @@ All code, CSVs, and scripts are in `benchmarks/` in the repo. You can re-run the
 
 :::important[TL;DR]
 
-- **Single-node**: Theseon matches Pebble on read throughput (~430K ops/sec) when both engines are given identical cache budgets — the earlier "Theseon wins 3.6×" result turned out to be a cache-sizing artifact.
-- **Cluster & chaos**: a 3-node cluster sustains ~1.7K ops/sec on read-heavy workloads at N=3/W=2/R=2, and error rate returns to 0% within ~1 second of a killed-and-restarted node.
+- **Single-node**: Theseon matches Pebble within ~5% on read throughput (~430K ops/sec) under identical cache budgets. The earlier \"Theseon wins 3.6×\" turned out to be a cache-sizing artifact, not an engine win.
+- **Cluster + chaos**: a 3-node cluster does tunable quorum reads and writes, and client-visible error rate stays at 0% through a full 60-second node outage — quorum coordination masks the failure to the client completely.
 - **Vector**: HNSW on SIFT-1M hits 95% recall@10 at ~830 QPS, about 100× behind hnswlib — SIMD on the distance kernel is the next bottleneck.
+- **The real find**: a 100% error rate on one quorum config turned out to be `BatchWrite` silently bypassing the coordinator — a bug in the server handler, not the read path I was investigating. The debugging walk-through is in \"the config that didn't work.\"
 
 :::
 
@@ -57,8 +58,8 @@ chaos run uses a 180-second window (60s steady, 60s outage, 60s recovery).
 
 **Why Pebble, not RocksDB.** Pebble is pure Go, actively maintained, and used in
 CockroachDB production. RocksDB would need CGo and librocksdb — half a day of build
-problems before the first run. Pebble also keeps the comparison honest: "my
-hand-built LSM vs. a production LSM" reads cleaner than an FFI-mediated comparison.
+problems before the first run. Pebble also keeps the comparison honest: \"my
+hand-built LSM vs. a production LSM\" reads cleaner than an FFI-mediated comparison.
 
 **Cluster is in-process.** Three `node.New(...)` instances in the same Go process,
 communicating over real gRPC on loopback. Real coordinator fan-out, real quorum
@@ -74,8 +75,8 @@ curve shapes as the signal.
 
 ## Single-node: Theseon vs. Pebble (and a debugging story)
 
-I wasn't planning to write a debugging story here. The plan was "measure both, report
-numbers." Then my first run showed Theseon beating Pebble on read-only workloads by
+I wasn't planning to write a debugging story here. The plan was \"measure both, report
+numbers.\" Then my first run showed Theseon beating Pebble on read-only workloads by
 **3.6×** — 442K vs. 123K ops/sec on YCSB-C. I didn't believe it.
 
 ### The wrong story
@@ -88,7 +89,7 @@ If you run both engines with their defaults, this is what you get:
 
 That means Pebble's 8 MB cache misses most reads and goes to syscall. Theseon's
 mmap'd files live in the 16 GB OS page cache. I wasn't comparing two engines; I was
-comparing "small block cache" to "large page cache." No surprise Theseon won.
+comparing \"small block cache\" to \"large page cache.\" No surprise Theseon won.
 
 ### The right story
 
@@ -109,9 +110,9 @@ the disk's fsync latency, not the engine. YCSB-C, with no writes, is what actual
 measures read-path efficiency. 430K vs. 414K ops/sec is ~2 µs per read on both: a
 bloom-filter check plus a hot-cached block fetch.
 
-The punchline isn't "Theseon is as fast as Pebble." It's **"two engines with
+The punchline isn't \"Theseon is as fast as Pebble.\" It's **\"two engines with
 identical cache budgets on identical data serve reads within 5% of each other,
-because the cache is the dominant variable."** That lesson — that benchmarking two
+because the cache is the dominant variable.\"** That lesson — that benchmarking two
 systems with their defaults is benchmarking two default configurations, not two
 systems — is what I'll remember from this exercise.
 
@@ -123,103 +124,221 @@ systems — is what I'll remember from this exercise.
 
 The cluster harness spins up three `node.Node` instances in-process, forms a ring
 via the admin API, and drives load against the coordinator on node-1. Three quorum
-configurations, each run 3× per workload:
+configurations:
 
 | (N, W, R) | YCSB-A | YCSB-B | YCSB-C |
 |---|---|---|---|
-| (3, 2, 2) | 196 ops/s, p99=91 ms | 1,687 ops/s, p99=18 ms | 22,800 ops/s, p99=0.74 ms |
-| (3, 3, 1) | 189 ops/s, p99=96 ms | 1,911 ops/s, p99=32 ms | 24,400 ops/s, p99=0.71 ms |
+| (3, 2, 2) | 185 ops/s, p99=97 ms | 1,900 ops/s, p99=22 ms | 24,500 ops/s, p99=0.81 ms |
+| (3, 3, 1) | 134 ops/s, p99=190 ms | 1,293 ops/s, p99=65 ms | 32,000 ops/s, p99=0.57 ms |
 
 Three things to notice:
 
-1. **YCSB-A (50/50) caps at ~200 ops/sec.** Every write now fans out to 2 or 3
-   replicas with their own fsyncs, so the single-node fsync floor (~500 ops/sec)
-   becomes a multi-node fsync-coordination floor. This is quorum doing its job, not
-   a performance problem.
-2. **p99 latency is sensitive to W.** (3,3,1) — requiring all three acks on writes —
-   pushes write p99 from 18 ms to 32 ms on the write-heavier YCSB-B. The tail gets
-   worse the stricter you make your write quorum, because any slow replica blocks
-   the ack.
-3. **Reads are cheap.** YCSB-C at 22K–24K ops/sec through gRPC + coordinator
-   fan-out, with p99 well under a millisecond. The ~10× drop from 430K single-node
-   is the gRPC round-trip budget.
+1. **YCSB-A caps at ~200 ops/sec.** Every write fans out to 2 or 3 replicas with
+   their own fsyncs, so the single-node fsync floor (~500 ops/sec) becomes a multi-
+   node fsync-coordination floor. This is quorum doing its job, not a performance
+   problem.
+2. **p99 latency tracks W.** (3,3,1) — requiring all three acks on writes —
+   pushes write p99 dramatically: 22 ms → 65 ms on YCSB-B, 97 ms → 190 ms on
+   YCSB-A. The tail gets worse the stricter the write quorum, because any slow
+   replica blocks the ack.
+3. **Reads are cheap, and cheapest at R=1.** YCSB-C at R=1 (any replica answers,
+   first one wins) lands 32K ops/sec; R=2 is 24K. The gap is the round-trip to
+   the second replica. The ~13× drop from 430K single-node is the gRPC + fan-out
+   budget.
 
 ![Cluster throughput & p99 by quorum configuration](/benchmarks/chart_kv_cluster.png)
 
-### The config that doesn't work: (3, 1, 3)
+### The config that didn't work: (3, 1, 3), and the bug it surfaced
 
-I ran a third configuration too: N=3, W=1, R=3. "Cheap writes, strict reads." On
-YCSB-C it produced a **100% error rate** with near-zero latency — every read failed,
-fast.
+I ran a third configuration too: N=3, W=1, R=3. \"Cheap writes, strict reads.\" On
+YCSB-C it produced a **100% error rate** with near-zero latency — every read
+failed, fast. This section is the debugging story, because the root cause wasn't
+what I thought, wasn't even in the file I was looking at, and it invalidated the
+two \"working\" cluster configurations above along the way.
 
-I thought I understood why. The coordinator's read path had a pre-filter: if fewer
-than R replicas passed a liveness check, fail the read immediately. With R=3 on a
-3-node cluster, any transient unroutability of a single node drops the pass count to
-2 and every read in that window fast-fails. I wrote a small fix — let the collection
-loop handle per-RPC failures instead of gating at dispatch — and re-ran.
+**First hypothesis (wrong).** The coordinator's read path had a pre-filter: if
+fewer than R replicas passed a liveness check, fail immediately. With R=3 on a
+3-node cluster, any transient unroutability of a single node drops the pass count
+to 2 and every read fast-fails. I wrote a small fix — let the collection loop
+handle per-RPC failures instead of gating at dispatch — and re-ran.
 
-Same error count, down to a rounding error. **2.48M errors before the fix, 2.48M
-after.** Hypothesis falsified.
+**2.48M errors before the fix. 2.48M after.** The fix did literally nothing.
+Hypothesis falsified. (I later reverted that coordinator edit — empirically
+`IsRoutable` wasn't flapping in a way that mattered, and the pre-filter is a
+reasonable efficiency optimization under real node failures. The real fix was
+somewhere else entirely.)
 
-What I think is actually happening is something in the concurrent RPC fan-out
-itself. With R=N=3, `maxFailures` is 1 — any single RPC failure across any of the
-three replicas fails the whole read. Whatever is producing those failures (context
-propagation, gRPC stream contention, something I haven't traced yet) is happening
-regardless of whether I gate on routability up front or rely on per-RPC errors
-later. The symptom — fast fail, ~40K errors/sec — points at something local to the
-coordinator's dispatch, not a real network failure.
+**Adding logging.** I added per-replica error logging to the read failure path —
+which replica failed, what gRPC status code, how long the call took. Re-ran at
+concurrency=1 (to rule out load-induced contention) and stared at the output. Every
+single read produced three log lines:
 
-That's where I stopped, for this post. Proper diagnosis needs per-RPC logging at the
-failure sites, and a methodical bisect at `concurrency=1` vs. `concurrency=8` to
-separate "logical bug" from "load-induced contention." It's a follow-up post.
+```
+target=node-1 (local)  err=\"decode envelope: envelope: unknown version: got 0, expected 1\"
+target=node-2 (remote) err=\"rpc error: code = Canceled desc = context canceled\"
+target=node-3 (remote) err=\"rpc error: code = Canceled desc = context canceled\"
+```
 
-The point I want to leave here: **a benchmark surfaced a real semantic/operational
-bug that unit tests didn't catch.** R=N on small clusters is brittle in ways that
-aren't obvious until you actually push load through it.
+Two distinct failure modes per read. node-1 returns a decode error the moment it
+tries to unwrap the stored value. The other two replicas return \"context canceled\"
+because, once node-1's error trips `maxFailures=1` and the coordinator's `Read`
+returns, the caller's context is canceled and the still-in-flight remote RPCs
+abort.
+
+The node-1 error is the real one. \"Unknown version: got 0, expected 1\" means the
+bytes in the local database were **not envelope-encoded**. But all writes go
+through the coordinator, which wraps every write in a versioned HLC envelope
+before storing it. How did raw bytes land in the local KV?
+
+**Tracing the write path.** `git grep` for the benchmark's pre-fill RPC path: the
+benchmark uses `BatchWrite` (one fsync per batch, for speed) instead of per-key
+`Put`. I opened [`server/handlers.go`](server/handlers.go) and found this:
+
+```go
+func (s *Server) BatchWrite(_ context.Context, req *pb.BatchWriteRequest) ... {
+    batch := s.db.NewWriteBatch()
+    for _, entry := range req.Entries {
+        batch.Put(entry.Key, entry.Value)
+    }
+    if err := batch.Commit(); err != nil { ... }
+    return &pb.BatchWriteResponse{}, nil
+}
+```
+
+Compare to the regular `Put` handler, which routes through `s.coordinator` when
+cluster mode is active. **`BatchWrite` doesn't.** It writes directly to the local
+DB, bypassing the coordinator entirely. No envelope encoding. No replication. No
+HLC stamping. The 30,000 keys I thought I'd pre-filled into the cluster had all
+landed on node-1 as raw bytes.
+
+**The domino effect.** Once I understood that, the rest of the cluster benchmark
+collapsed into question. What had the \"successful\" (3,2,2) and (3,3,1)
+configurations been measuring? Their reads also hit keys that only existed on
+node-1 as raw bytes. So:
+
+- node-1 returned the decode error (same as in (3,1,3)).
+- node-2 and node-3 returned \"not found\" — they didn't have the key at all.
+- Under R=2, the coordinator collects 2 \"not found\" responses, counts those as
+  quorum-met (two replicas agreed the key doesn't exist), and returns
+  `Found: false`. That's a **successful read** from the client's perspective.
+
+In other words, the 22K ops/sec I'd reported for (3,2,2) YCSB-C was real
+throughput — of the coordinator fast-returning empty answers. The read path wasn't
+exercising anything. Only (3,1,3) made the bug visible, because R=3 means the
+decode-error counts as a failure and there aren't two quorum \"not found\" votes to
+absorb it.
+
+**The fix.** Adding coordinator routing to `BatchWrite`:
+
+```go
+if s.coordinator != nil {
+    for _, entry := range req.Entries {
+        if entry.IsDelete {
+            err = s.coordinator.Delete(ctx, entry.Key)
+        } else {
+            err = s.coordinator.Write(ctx, entry.Key, entry.Value)
+        }
+        if err != nil { return nil, ... }
+    }
+    return &pb.BatchWriteResponse{}, nil
+}
+// Standalone mode: fast local batch.
+batch := s.db.NewWriteBatch()
+...
+```
+
+Correctness: writes now fan out properly, entries are envelope-encoded, node-2
+and node-3 receive them. Performance cost: the cluster-mode `BatchWrite` is no
+longer a single-fsync batch; each entry gets its own coordinator fan-out. In
+practice pre-fill gets ~3× slower for the cluster harness. A coordinator-level
+batched write (grouping entries per replica into a single `ReplicateWriteBatch`)
+would restore that, and is on the list.
+
+**Verified.** After the fix, (3,1,3) YCSB-C at concurrency=1 produced 5,458
+ops/sec, 0 errors, p99 = 0.45 ms — real data, real reads, no errors. At
+concurrency=8 it matched the other configs at ~22K ops/sec. The cluster numbers
+above reflect a re-run with the fix in place; the originals are in the git
+history if anyone's curious.
+
+### What I take from this
+
+Two things:
+
+First, **always read the code path you're benchmarking, end to end.** I'd been
+operating on the assumption \"BatchWrite is just Put in bulk\" for weeks. The
+difference — that one routes through the coordinator and one doesn't — isn't
+something you notice looking at call sites; it's only visible if you open the
+server handler and compare. A benchmark harness that pre-fills via BatchWrite in
+cluster mode will cheerfully produce fast, empty, meaningless results until you
+run a configuration that makes the bug observable.
+
+Second, **the benchmark is the test.** Unit tests for BatchWrite pass — they
+write to a local DB and read back from it, which the local-only path does
+correctly. The coordinator's read path has tests too, and they pass — because the
+test setup uses the coordinator to *write* the data under test. Neither test sees
+the \"write through one path, read through another\" asymmetry. The only way to
+notice this bug was to run a workload that exercises both paths and returns
+client-visible errors. That's a real argument for benchmark harnesses as part of
+your test suite, not just as post-hoc instruments.
 
 ---
 
 ## Chaos: kill a node under load
 
-This is the chart I'm proudest of.
-
-The harness drives steady YCSB-A at the coordinator. At t=60 s it calls
-`node2.Stop()`. At t=120 s it brings up a replacement node-2 using the same data
-directory and re-joins via admin RPCs.
+The harness drives steady YCSB-A (50/50 reads and writes) against the coordinator.
+At t=60 s it calls `node2.Stop()`. At t=120 s it brings up a replacement node-2
+using the same data directory and re-joins via admin RPCs.
 
 ![Chaos run: node-2 killed and restarted mid-load](/benchmarks/chart_kv_chaos.png)
 
-Pre-kill: ~190 ops/sec steady, 0% errors.
+The numbers:
 
-During the outage: throughput drops to ~150 ops/sec; error rate jumps to ~45%. The
-drop is because about one-third of keys have node-2 in their preferred replica set,
-and reads/writes targeting those keys can't make R=2 or W=2 without it. The ~45%
-failure rate (rather than ~33%) reflects the mix of reads and writes hitting the
-affected partition at both directions.
+| Phase | ops/sec | client error rate |
+|---|---|---|
+| Pre-kill (t<60 s)   | ~130 | 0% |
+| During outage (60–120 s) | ~161 | **0%** |
+| Post-restart (t>120 s) | ~132 | 0% |
 
-At t=120 s, the replacement starts. **Error rate drops to zero within one second**
-of the restart. Throughput recovers to baseline within a few seconds.
+Two things the chart shows that I want to be specific about:
 
-Two things this chart shows, and two things it does not:
+**The cluster serves every request, correctly, through a node failure.** At N=3
+with W=R=2, the coordinator only needs acks or responses from any 2 of 3 replicas.
+When node-2 dies, node-1 and node-3 are still reachable; every operation still
+meets quorum. Client-visible error rate stays at zero for the full 60-second
+outage. That's what leaderless quorum replication is supposed to buy you, and the
+chart makes it concrete.
 
-- **Shows**: SWIM detected the new node, the coordinator's routing picked it up, and
-  per-key reads and writes that had been failing now resolve against the live
-  replica set. That's membership and routability recovery.
-- **Shows**: throughput returning to baseline. The coordinator no longer has a
-  blackhole in its fan-out.
-- **Does not show**: that hinted handoff drained the data node-2 missed. Draining
-  is a separate background process whose progress would need to come from
-  `theseon_hint_drain_batches_total` in `/metrics`; the chart above measures only
-  what the client sees. In my runs the drain counter did advance after restart, but
-  that's a second chart I'm not including here.
-- **Does not show**: consistency behavior for keys written during the outage. R=2
-  reads will still answer from nodes 1 and 3 (which have the data) until the drain
-  catches node-2 up; in the meantime node-2 has missing versions. A read steered
-  specifically at node-2 would see that; a quorum read masks it.
+**Throughput *rises* during the outage.** This surprised me at first, but it has a
+clean explanation: with three alive replicas, the coordinator waits for the two
+fastest of three RPCs, and the slowest reply is never on the critical path. With
+two alive replicas, there's no slow-replica to ignore — but there's also one
+fewer RPC to issue per op. Empirically on this harness, the reduced fan-out cost
+slightly outweighs the loss of \"wait for the fastest 2 of 3\" optimization, giving
+a ~25% throughput bump during the outage. Not a result I'd build policy on, but
+an honest reading of the chart.
 
-That split — "membership recovery" vs. "hint drain" vs. "read-your-writes under
-partial recovery" — is worth being careful about. The chart proves the first two
-quickly. The third needs a separate harness.
+**At t=120 s**, the replacement node-2 joins. Throughput settles back to
+pre-kill levels within a few seconds — the coordinator's fan-out now includes
+three replicas again, and one of them is the new node-2 (initially empty, but
+served via hinted-handoff drain in the background).
+
+What this chart does *not* show, and where I'd be careful about over-claiming:
+
+- **Hint drain progress** isn't plotted here. After restart,
+  `theseon_hint_drain_batches_total` increments at `/metrics` as the coordinator
+  replays buffered writes to the recovered node. That's what brings node-2 back to
+  an up-to-date state, but its progress isn't visible in client-side throughput.
+- **Read-your-writes for keys written during the outage.** During the outage,
+  writes land on {node-1, node-3} and a hint is buffered at the coordinator for
+  node-2. A subsequent R=2 read happily answers from {node-1, node-3} and returns
+  the correct value — node-2's staleness is masked by quorum. A read aimed
+  specifically at node-2 (which Theseon doesn't expose as a mode) would see it
+  until drain completes.
+
+That separation — \"membership recovery,\" \"client-visible correctness,\"
+\"per-replica convergence\" — is worth stating explicitly. Fewer things the chart
+*actually* proves than you might initially think, but what it does prove is the
+main thing you want from a replicated store.
 
 ---
 
@@ -277,16 +396,20 @@ multiply-add into a single instruction. Back-of-envelope: 4× speedup on the dis
 kernel, which is ~60% of search time, gives you ~2.5× overall QPS at the same
 recall. That's the single highest-leverage change.
 
-**Coordinator dispatch under load at R=N.** The (3,1,3) story above. The bug
-probably lives in the interaction between concurrent goroutines, context
-propagation, and the collection loop. It's not visible at low concurrency or with
-R<N, which is why the integration tests don't catch it. A future post will be the
-traced, diagnosed version.
+**Coordinator-level batched writes.** The BatchWrite fix above preserves
+correctness by routing every entry through the coordinator sequentially, so a 1024-
+entry batch becomes 1024 coordinator writes. That made pre-fill ~3× slower for the
+cluster harness. A proper fix groups entries by replica set and fans out one
+`ReplicateWriteBatch` RPC per replica, restoring the one-fsync-per-batch property
+end-to-end. The supporting RPC exists on the replicas already; it just needs a
+coordinator-side driver.
 
-A few other items on the list but at lower priority: Merkle-tree anti-entropy does
-exist but I haven't benchmarked its convergence time under realistic divergence;
-snapshot restart for HNSW is there but I haven't measured its recovery latency on a
-1M-vector graph; block cache in Theseon is eager and doesn't evict.
+A few other items on the list but at lower priority: Merkle-tree anti-entropy for
+background drift repair isn't implemented yet — today the cluster relies on read
+repair plus hinted handoff, which cover the common cases but can drift under
+permanent quiescence; snapshot restart for HNSW is implemented but I haven't
+measured its recovery latency on a 1M-vector graph; Theseon's block cache is eager
+and doesn't evict.
 
 ---
 
@@ -300,7 +423,7 @@ If I were starting this benchmark exercise again:
   Either pick defaults and be explicit that's what you measured, or pick configs
   that match some benchmark-relevant property (working-set-in-cache, here).
 - **Record what I expected before running.** I didn't write down my prior, which
-  made it harder to notice when a result was suspicious. "Theseon 3.6× over Pebble"
+  made it harder to notice when a result was suspicious. \"Theseon 3.6× over Pebble\"
   should have tripped the alarm earlier than it did.
 
 ---
