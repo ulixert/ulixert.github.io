@@ -428,6 +428,9 @@ If I were starting this benchmark exercise again:
 
 ---
 
+### Read next
+[**Merkle Anti-Entropy: Catching Drift That Read Repair and Hinted Handoff Miss**](/posts/theseon-anti-entropy/)
+
 ### In this series
 
 The earlier posts in this series cover the design decisions that these numbers are
@@ -451,6 +454,7 @@ per-RPC histograms) in Prometheus format.
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
 12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
 13. **Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M**
+14. [Merkle Anti-Entropy: Catching Drift That Read Repair and Hinted Handoff Miss](/posts/theseon-anti-entropy/)
 
 ---
 

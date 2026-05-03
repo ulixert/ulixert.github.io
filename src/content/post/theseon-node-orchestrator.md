@@ -376,6 +376,7 @@ Second, data streaming on topology change. Right now a JOINING node receives liv
 [**Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M**](/posts/theseon-benchmarks/)
 
 ### In this series
+
 1. [Building Theseon: Architecture of a Distributed LSM and Vector Engine in Go](/posts/building-theseon/)
 2. [Storage Foundation: SSTables, Memtables, and the WAL](/posts/theseon-storage-foundation/)
 3. [Sequence Numbers, the Merge Iterator, and Wiring It All Together](/posts/theseon-wiring-it-together/)
@@ -389,6 +390,7 @@ Second, data streaming on topology change. Right now a JOINING node receives liv
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
 12. **Starting, Joining, Activating: The Node Orchestrator**
 13. [Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M](/posts/theseon-benchmarks/)
+14. [Merkle Anti-Entropy: Catching Drift That Read Repair and Hinted Handoff Miss](/posts/theseon-anti-entropy/)
 
 ---
 

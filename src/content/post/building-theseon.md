@@ -310,6 +310,7 @@ Each post covers a layer of the system, building from the bottom up:
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
 12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
 13. [Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M](/posts/theseon-benchmarks/)
+14. [Merkle Anti-Entropy: Catching Drift That Read Repair and Hinted Handoff Miss](/posts/theseon-anti-entropy/)
 
 ## References
 

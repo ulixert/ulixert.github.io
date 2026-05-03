@@ -238,6 +238,7 @@ Hinted handoff handles the fast case: a node dies, comes back quickly, and recei
 11. [Fan-Out, Merge, Repair: Distributed Vector Search](/posts/theseon-distributed-vector-search/)
 12. [Starting, Joining, Activating: The Node Orchestrator](/posts/theseon-node-orchestrator/)
 13. [Benchmarking Theseon: KV, Cluster, Chaos, and HNSW on SIFT-1M](/posts/theseon-benchmarks/)
+14. [Merkle Anti-Entropy: Catching Drift That Read Repair and Hinted Handoff Miss](/posts/theseon-anti-entropy/)
 
 ---
 
